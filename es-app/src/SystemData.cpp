@@ -1258,7 +1258,7 @@ unsigned int SystemData::getGameCount() const
 SystemData* SystemData::getRandomSystem()
 {
 	//  this is a bit brute force. It might be more efficient to just to a while (!gameSystem) do random again...
-	unsigned int total = sSystemVector.count([](SystemData* sys) { return sys->isGameSystem(); });
+	unsigned int total = sSystemVector.count([](auto sys) { return sys->isGameSystem(); });
 
 	// get random number in range
 	int target = Randomizer::random(total);
@@ -1531,7 +1531,7 @@ bool SystemData::isCheevosSupported()
 
 bool SystemData::isNetplayActivated()
 {
-	return sSystemVector.any([](SystemData* sys) { return sys->isNetplaySupported(); });
+	return sSystemVector.any([](auto sys) { return sys->isNetplaySupported(); });
 }
 
 bool SystemData::isGroupChildSystem() 

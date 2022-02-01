@@ -34,7 +34,7 @@ EmulatorFeatures::Features EmulatorFeatures::parseFeatures(const std::string fea
 		if (trim == "padtokeyboard" || trim == "joystick2pad") ret = ret | EmulatorFeatures::Features::padTokeyboard;
 
 		// The next features can be overriden with sharedFeatures
-		if (CustomFeatures::SharedFeatures.any([trim](auto x) { return x.value == trim; }))
+		if (CustomFeatures::SharedFeatures.any([trim](CustomFeatureChoice x) { return x.value == trim; }))
 			continue;
 
 		if (trim == "ratio") ret = ret | EmulatorFeatures::Features::ratio;
@@ -414,10 +414,10 @@ void CustomFeatures::sort()
 
 bool CustomFeatures::hasFeature(const std::string& name) const
 {
-	return any([name](auto x) { return x.value == name; });
+	return any([name](CustomFeatureChoice x) { return x.value == name; });
 }
 
 bool CustomFeatures::hasGlobalFeature(const std::string& name) const
 {
-	return any([name](auto x) { return x.value == name || x.value == "global." + name; });
+	return any([name](CustomFeatureChoice x) { return x.value == name || x.value == "global." + name; });
 }

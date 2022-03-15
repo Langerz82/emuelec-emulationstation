@@ -647,7 +647,21 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
          });
 #endif
 
-    dangerZone->addEntry(_("BACKUP EMUELEC CONFIGS"), true, [mWindow] { 
+    dangerZone->addEntry(_("CLOUD BACKUP SETTINGS AND GAME SAVES"), true, [mWindow] { 
+    mWindow->pushGui(new GuiMsgBox(mWindow, _("WARNING THIS WILL RESTART EMULATIONSTATION!\n\nThis will backup your game saves, savestates and emuelec configs to the cloud service configured on rclone.conf\n\nBACKUP TO CLOUD AND RESTART?"), _("YES"),
+				[] { 
+				runSystemCommand("systemd-run /usr/bin/emuelec-utils ee_cloud_backup backup", "", nullptr);
+				}, _("NO"), nullptr));
+     });
+
+    dangerZone->addEntry(_("CLOUD RESTORE SETTINGS AND GAME SAVES"), true, [mWindow] { 
+    mWindow->pushGui(new GuiMsgBox(mWindow, _("WARNING THIS WILL RESTART EMULATIONSTATION!\n\nThis will restore your game saves, savestates and emuelec configs from the cloud service configured on rclone.conf, it will overwrite any existing file!!\n\nRESTORE FROM CLOUD AND RESTART?"), _("YES"),
+				[] { 
+				runSystemCommand("systemd-run /usr/bin/emuelec-utils ee_cloud_backup restore", "", nullptr);
+				}, _("NO"), nullptr));
+     });
+
+    dangerZone->addEntry(_("LOCAL BACKUP EMUELEC CONFIGS"), true, [mWindow] { 
     mWindow->pushGui(new GuiMsgBox(mWindow, _("WARNING THIS WILL RESTART EMULATIONSTATION!\n\nAFTER THE SCRIPT IS DONE REMEMBER TO COPY THE FILE /storage/roms/backup/ee_backup_config.tar.gz TO SOME PLACE!\n\nBACKUP CURRENT CONFIG AND RESTART?"), _("YES"),
 				[] { 
 				runSystemCommand("systemd-run /usr/bin/emuelec-utils ee_backup backup", "", nullptr);
@@ -1961,7 +1975,7 @@ void GuiMenu::openSystemSettings()
 	s->addGroup(_("ADVANCED"));
 
 	// Security
-	s->addEntry(_("SECURITY"), true, [this] 
+	s->addEntry(_("SECURITY"), true, [this, s] 
 	{
 		GuiSettings *securityGui = new GuiSettings(mWindow, _("SECURITY").c_str());
 		auto securityEnabled = std::make_shared<SwitchComponent>(mWindow);
@@ -4004,28 +4018,31 @@ void GuiMenu::openQuitMenu_static(Window *window, bool quickAccessMenu, bool ani
 		}, _("NO"), nullptr));
 	}, "iconRestart");
 
-	s->addEntry(_("START RETROARCH"), false, [window] {
-		window->pushGui(new GuiMsgBox(window, _("REALLY START RETROARCH?"), _("YES"),
-			[] {
-			remove("/var/lock/start.games");
-            runSystemCommand("touch /var/lock/start.retro", "", nullptr);
-			runSystemCommand("systemctl start retroarch.service", "", nullptr);
-			Scripting::fireEvent("quit", "retroarch");
-			quitES(QuitMode::QUIT);
-		}, _("NO"), nullptr));
-	}, "iconControllers");
-	
-	s->addEntry(_("REBOOT FROM NAND"), false, [window] {
-		window->pushGui(new GuiMsgBox(window, _("REALLY REBOOT FROM NAND?"), _("YES"),
-			[] {
-			Scripting::fireEvent("quit", "nand");
-			runSystemCommand("rebootfromnand", "", nullptr);
-			runSystemCommand("sync", "", nullptr);
-			runSystemCommand("systemctl reboot", "", nullptr);
-			quitES(QuitMode::QUIT);
-		}, _("NO"), nullptr));
-	}, "iconAdvanced");
-
+	bool isFullUI = UIModeController::getInstance()->isUIModeFull();
+	if (isFullUI)
+	{
+		s->addEntry(_("START RETROARCH"), false, [window] {
+			window->pushGui(new GuiMsgBox(window, _("REALLY START RETROARCH?"), _("YES"),
+				[] {
+				remove("/var/lock/start.games");
+				runSystemCommand("touch /var/lock/start.retro", "", nullptr);
+				runSystemCommand("systemctl start retroarch.service", "", nullptr);
+				Scripting::fireEvent("quit", "retroarch");
+				quitES(QuitMode::QUIT);
+			}, _("NO"), nullptr));
+		}, "iconControllers");
+		
+		s->addEntry(_("REBOOT FROM NAND"), false, [window] {
+			window->pushGui(new GuiMsgBox(window, _("REALLY REBOOT FROM NAND?"), _("YES"),
+				[] {
+				Scripting::fireEvent("quit", "nand");
+				runSystemCommand("rebootfromnand", "", nullptr);
+				runSystemCommand("sync", "", nullptr);
+				runSystemCommand("systemctl reboot", "", nullptr);
+				quitES(QuitMode::QUIT);
+			}, _("NO"), nullptr));
+		}, "iconAdvanced");
+	}
 #endif
 
 	if (quickAccessMenu)

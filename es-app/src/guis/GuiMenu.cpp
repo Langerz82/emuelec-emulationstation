@@ -505,16 +505,23 @@ void GuiMenu::openEmuELECSettings()
 
 	s->addInputTextRow(_("DEFAULT YOUTUBE SEARCH WORD"), "youtube.searchword", false);
 
-	auto enable_advmamegp = std::make_shared<SwitchComponent>(mWindow);
-	bool advgpEnabled = SystemConf::getInstance()->get("advmame_auto_gamepad") == "1";
-	enable_advmamegp->setState(advgpEnabled);
-	s->addWithLabel(_("AUTO CONFIG ADVANCEMAME GAMEPAD"), enable_advmamegp);
-	
-	s->addSaveFunc([enable_advmamegp, window] {
-		bool advmamegpenabled = enable_advmamegp->getState();
-		SystemConf::getInstance()->set("advmame_auto_gamepad", advmamegpenabled ? "1" : "0");
-		SystemConf::getInstance()->saveSystemConf();
+// JOSHL
+//#ifdef _ENABLEEMUELEC
+	auto theme = ThemeData::getMenuTheme();
+
+	ComponentListRow row;
+
+	auto createText = std::make_shared<TextComponent>(window, _("GAMEPAD CONFIG"), theme->Text.font, theme->Text.color);
+	row.addElement(createText, true);
+	row.makeAcceptInputHandler([window, s, createText]
+	{
+		GuiMenu::createGamepadConfig(window, s);
 	});
+	s->addRow(row);
+//#endif
+	
+	auto gamepadConfig = std::make_shared< OptionListComponent<std::string> >(mWindow, "GAMEPAD CONFIG", false);
+	s->addWithLabel(_("GAMEPAD CONFIG"), emuelec_retroarch_menu_def);
 
 		auto emuelec_retroarch_menu_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "RETROARCH MENU", false);
 		std::vector<std::string> ramenuoptions;
@@ -539,7 +546,7 @@ void GuiMenu::openEmuELECSettings()
 			}
 		});
 
-if (UIModeController::getInstance()->isUIModeFull())
+	if (UIModeController::getInstance()->isUIModeFull())
 	{
         //External Mount Options
         s->addEntry(_("EXTERNAL MOUNT OPTIONS"), true, [this] { openExternalMounts(mWindow, "global"); });
@@ -550,6 +557,29 @@ if (UIModeController::getInstance()->isUIModeFull())
 
     mWindow->pushGui(s);
 }
+
+//#ifdef _ENABLEEMUELEC
+
+void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfiguration)
+{
+	GuiSettings* gamepadConfiguration = new GuiSettings(window, _("GAMEPAD CONFIG"));
+	
+	auto enable_advmamegp = std::make_shared<SwitchComponent>(window);
+	bool advgpEnabled = SystemConf::getInstance()->get("advmame_auto_gamepad") == "1";
+	enable_advmamegp->setState(advgpEnabled);
+	gamepadConfiguration->addWithLabel(_("AUTO CONFIG ADVANCEMAME GAMEPAD"), enable_advmamegp);
+	
+	gamepadConfiguration->addSaveFunc([enable_advmamegp, window] {
+		bool advmamegpenabled = enable_advmamegp->getState();
+		SystemConf::getInstance()->set("advmame_auto_gamepad", advmamegpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
+
+	window->pushGui(gamepadConfiguration);
+}
+
+//#endif
 
 void GuiMenu::openExternalMounts(Window* mWindow, std::string configName)
 {

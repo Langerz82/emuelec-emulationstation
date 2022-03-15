@@ -506,7 +506,7 @@ void GuiMenu::openEmuELECSettings()
 	s->addInputTextRow(_("DEFAULT YOUTUBE SEARCH WORD"), "youtube.searchword", false);
 
 // JOSHL
-//#ifdef _ENABLEEMUELEC
+#ifdef _ENABLEEMUELEC
 	auto theme = ThemeData::getMenuTheme();
 
 	ComponentListRow row;
@@ -518,10 +518,7 @@ void GuiMenu::openEmuELECSettings()
 		GuiMenu::createGamepadConfig(window, s);
 	});
 	s->addRow(row);
-//#endif
-	
-	auto gamepadConfig = std::make_shared< OptionListComponent<std::string> >(mWindow, "GAMEPAD CONFIG", false);
-	s->addWithLabel(_("GAMEPAD CONFIG"), emuelec_retroarch_menu_def);
+#endif
 
 		auto emuelec_retroarch_menu_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "RETROARCH MENU", false);
 		std::vector<std::string> ramenuoptions;
@@ -558,7 +555,7 @@ void GuiMenu::openEmuELECSettings()
     mWindow->pushGui(s);
 }
 
-//#ifdef _ENABLEEMUELEC
+#ifdef _ENABLEEMUELEC
 
 void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfiguration)
 {
@@ -579,7 +576,7 @@ void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfigurati
 	window->pushGui(gamepadConfiguration);
 }
 
-//#endif
+#endif
 
 void GuiMenu::openExternalMounts(Window* mWindow, std::string configName)
 {

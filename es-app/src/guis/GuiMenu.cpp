@@ -4760,8 +4760,10 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
 			bool safe_video = false;
 			for(std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils resolutions)")); getline(ss, def_video, ','); ) {
-				if (video_choice == def_video)
+				if (video_choice == def_video) {
 					safe_video = true;
+					break;
+				}
 			}			
 
 			if (!safe_video) {

@@ -4751,7 +4751,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
 
 		bool video_override = false;
-		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice, &video_override] {
+		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice, video_override] {
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
 			bool safe_video = false;
@@ -4766,13 +4766,13 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				}
 			}			
 
-			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice, &video_override] {
+			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice, video_override] {
 				SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
 				SystemConf::getInstance()->saveSystemConf();
 				video_override = true;
 			});
 
-			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice, &video_override] {
+			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice, video_override] {
 				videoNativeResolutionMode_choice->selectFirstItem();
 				video_override = false;
 			});
@@ -4788,7 +4788,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		
 
 		videoNativeResolutionMode_choice->setSelectedChangedCallback(
-			[mWindow, systemConfiguration, video_changed, configName, videoNativeResolutionMode_choice, &video_override] (std::string s) {
+			[mWindow, systemConfiguration, video_changed, configName, videoNativeResolutionMode_choice, video_override] (std::string s) {
 			long unsigned int m1 = (long unsigned int) &(*mWindow->peekGui());
 			long unsigned int m2 = (long unsigned int) &(*systemConfiguration);
 			if (m1 == m2)
@@ -4797,7 +4797,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			video_changed();
 		});
 
-		systemConfiguration->addSaveFunc([mWindow, video_changed, configName, videoNativeResolutionMode_choice, &video_override] {
+		systemConfiguration->addSaveFunc([mWindow, video_changed, configName, videoNativeResolutionMode_choice, video_override] {
 			video_changed();
 		});
 	}

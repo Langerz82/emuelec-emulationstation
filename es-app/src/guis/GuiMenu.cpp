@@ -4750,10 +4750,8 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
 
-		static bool video_run_once = false;
-		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice, video_run_once] {
-			if (video_run_once)
-				return;
+		//safe_video_run_once = false;
+		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice] {
 
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
@@ -4772,8 +4770,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 
 			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice] {
 				SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
-				SystemConf::getInstance()->saveSystemConf();
-				
+				SystemConf::getInstance()->saveSystemConf();				
 			});
 
 			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice] {
@@ -4781,18 +4778,17 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				SystemConf::getInstance()->set(configName + ".nativevideo", "");
 				SystemConf::getInstance()->saveSystemConf();
 			});
-			
+
 			if (!safe_video) {
-				mWindow->pushGui(new GuiMsgBox(mWindow,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
+				mWindow->pushGui(new GuiMsgBox(mWindow,  video_choice + _(" UNSAFE RESOLUTION DETECTED, CONTINUE?"),
 					_("YES"), saveFunc, _("NO"), abortFunc));
 			}
 			else {
 				saveFunc();
 			}
-			video_run_once = true;
 		});
 
-		videoNativeResolutionMode_choice->setSelectedChangedCallback(
+		/*videoNativeResolutionMode_choice->setSelectedChangedCallback(
 			[mWindow, systemConfiguration, video_changed] (std::string s) {
 			long unsigned int m1 = (long unsigned int) &(*mWindow->peekGui());
 			long unsigned int m2 = (long unsigned int) &(*systemConfiguration);
@@ -4800,7 +4796,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				return;
 
 			video_changed();
-		});
+		});*/
 
 		systemConfiguration->addSaveFunc([mWindow, video_changed] {
 			video_changed();

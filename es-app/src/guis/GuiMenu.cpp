@@ -4755,7 +4755,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			SystemConf::getInstance()->saveSystemConf();			
 		});
 
-		systemConfiguration->addSaveFunc([configName, videoNativeResolutionMode_choice] {
+		systemConfiguration->addSaveFunc([mWindow, configName, videoNativeResolutionMode_choice] {
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
 			bool safe_video = false;
@@ -4765,7 +4765,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			}			
 
 			if (!safe_video) {
-				window->pushGui(new GuiMsgBox(window,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
+				mWindow->pushGui(new GuiMsgBox(window,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
 					_("YES"), saveFunc, _("NO"), nullptr));
 			}
 		});

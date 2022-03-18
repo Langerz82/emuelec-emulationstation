@@ -4770,6 +4770,9 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				mWindow->pushGui(new GuiMsgBox(mWindow,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
 					_("YES"), saveFunc, _("NO"), nullptr));
 			}
+			else {
+				saveFunc();
+			}
 		});
 		
 

@@ -4750,12 +4750,17 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
 
-		//static bool video_override = false;
-		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice] {
+		static bool video_run_once = false;
+		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice, video_run_once] {
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
 			bool safe_video = false;
 
+			if (video_run_once)
+				return;
+			
+			video_run_once = true;
+				
 			if (video_choice == "auto")
 				safe_video = true;
 			else {
@@ -4770,12 +4775,10 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice] {
 				SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
 				SystemConf::getInstance()->saveSystemConf();
-				//video_override = true;
 			});
 
 			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice] {
 				videoNativeResolutionMode_choice->selectFirstItem();
-				//video_override = false;
 			});
 			
 			if (!safe_video) {
@@ -4787,15 +4790,15 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			}
 		});
 
-		/*videoNativeResolutionMode_choice->setSelectedChangedCallback(
-			[mWindow, systemConfiguration, video_changed, configName, videoNativeResolutionMode_choice, video_override] (std::string s) {
+		videoNativeResolutionMode_choice->setSelectedChangedCallback(
+			[mWindow, systemConfiguration, video_changed, configName, videoNativeResolutionMode_choice] (std::string s) {
 			long unsigned int m1 = (long unsigned int) &(*mWindow->peekGui());
 			long unsigned int m2 = (long unsigned int) &(*systemConfiguration);
 			if (m1 == m2)
 				return;
 
 			video_changed();
-		});*/
+		});
 
 		systemConfiguration->addSaveFunc([mWindow, video_changed, configName, videoNativeResolutionMode_choice] {
 			video_changed();

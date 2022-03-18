@@ -4758,8 +4758,6 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 
 			if (video_run_once)
 				return;
-			
-			video_run_once = true;
 				
 			if (video_choice == "auto")
 				safe_video = true;
@@ -4772,13 +4770,15 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				}
 			}
 
-			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice] {
+			const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice, video_run_once] {
 				SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
 				SystemConf::getInstance()->saveSystemConf();
+				video_run_once = true;
 			});
 
-			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice] {
+			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice, video_run_once] {
 				videoNativeResolutionMode_choice->selectFirstItem();
+				video_run_once = false
 			});
 			
 			if (!safe_video) {

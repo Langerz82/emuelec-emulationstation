@@ -4749,9 +4749,25 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 	{
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
+
+		const std::function<void()> saveFunc([configName, videoNativeResolutionMode_choice] {
+			SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
+			SystemConf::getInstance()->saveSystemConf();			
+		});
+
 		systemConfiguration->addSaveFunc([configName, videoNativeResolutionMode_choice] {
-				SystemConf::getInstance()->set(configName + ".nativevideo", videoNativeResolutionMode_choice->getSelected());
-				SystemConf::getInstance()->saveSystemConf();
+			std::string def_video;
+			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
+			bool safe_video = false;
+			for(std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils resolutions)")); getline(ss, def_video, ','); ) {
+				if (video_choice == def_video)
+					safe_video = true;
+			}			
+
+			if (!safe_video) {
+				window->pushGui(new GuiMsgBox(window,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
+					_("YES"), saveFunc, _("NO"), nullptr));
+			}
 		});
 	}
 

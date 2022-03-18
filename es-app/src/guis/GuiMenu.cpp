@@ -4750,7 +4750,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
 
-		bool video_override = false;
+		static bool video_override = false;
 		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice, video_override] {
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();

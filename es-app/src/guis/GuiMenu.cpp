@@ -4755,7 +4755,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			SystemConf::getInstance()->saveSystemConf();			
 		});
 
-		systemConfiguration->addSaveFunc([mWindow, configName, videoNativeResolutionMode_choice] {
+		systemConfiguration->addSaveFunc([mWindow, saveFunc, configName, videoNativeResolutionMode_choice] {
 			std::string def_video;
 			std::string video_choice = videoNativeResolutionMode_choice->getSelected();
 			bool safe_video = false;

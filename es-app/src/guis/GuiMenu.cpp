@@ -4765,7 +4765,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			}			
 
 			if (!safe_video) {
-				mWindow->pushGui(new GuiMsgBox(window,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
+				mWindow->pushGui(new GuiMsgBox(mWindow,  _("UNSAFE RESOLUTION DETECTED, CONTINUE?"),
 					_("YES"), saveFunc, _("NO"), nullptr));
 			}
 		});

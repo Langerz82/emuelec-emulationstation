@@ -4778,7 +4778,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 
 			const std::function<void()> abortFunc([configName, videoNativeResolutionMode_choice, video_run_once] {
 				videoNativeResolutionMode_choice->selectFirstItem();
-				video_run_once = false
+				video_run_once = false;
 			});
 			
 			if (!safe_video) {

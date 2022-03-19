@@ -4750,7 +4750,6 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
 
-		//safe_video_run_once = false;
 		const std::function<void()> video_changed([mWindow, configName, videoNativeResolutionMode_choice] {
 
 			std::string def_video;
@@ -4787,16 +4786,6 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				saveFunc();
 			}
 		});
-
-		/*videoNativeResolutionMode_choice->setSelectedChangedCallback(
-			[mWindow, systemConfiguration, video_changed] (std::string s) {
-			long unsigned int m1 = (long unsigned int) &(*mWindow->peekGui());
-			long unsigned int m2 = (long unsigned int) &(*systemConfiguration);
-			if (m1 == m2)
-				return;
-
-			video_changed();
-		});*/
 
 		systemConfiguration->addSaveFunc([mWindow, video_changed] {
 			video_changed();

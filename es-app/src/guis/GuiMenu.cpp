@@ -5570,11 +5570,6 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			GuiMenu::deleteBtnJoyCfg(mWindow, systemConfiguration, prefixName);
 		}();
 	}
-	
-	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::hlebios))
-	{
-		systemConfiguration->addSwitch(_("Use HLE BIOS"), configName + ".hlebios", false);
-	}	
 #endif
 	// Screen ratio choice
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::ratio))

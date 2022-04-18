@@ -77,8 +77,9 @@ public:
 #ifdef _ENABLEEMUELEC
 		vertical = 524288,
 		nativevideo = 1048576,
+		hlebios = 2097152,
+    joybtnremap = 4194304,
 #endif
-
 		all = 0x0FFFFFFF
 	};
 

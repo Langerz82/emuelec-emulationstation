@@ -358,7 +358,20 @@ public:
 		}
                 return "";
 	}
-        
+
+#ifdef _ENABLEEMUELEC
+	int getSelectedIndex()
+	{
+		assert(mMultiSelect == false);
+
+		for (unsigned int i = 0; i < mEntries.size(); i++)
+			if (mEntries.at(i).selected)
+				return i;
+
+		return -1;
+	}
+#endif
+
 	void addEx(const std::string name, const std::string description, const T& obj, bool selected, bool treeChild = false)
 	{
 		for (auto sysIt = mEntries.cbegin(); sysIt != mEntries.cend(); sysIt++)

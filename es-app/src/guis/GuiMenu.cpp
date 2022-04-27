@@ -5461,7 +5461,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 	}
 
 #ifdef _ENABLEEMUELEC
-	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::nativevideo))
+	/*if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::nativevideo))
 	{
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
 		systemConfiguration->addWithLabel(_("NATIVE VIDEO"), videoNativeResolutionMode_choice);
@@ -5476,7 +5476,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				safe_video = true;
 			else {
 				for(std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils resolutions)")); getline(ss, def_video, ','); ) {
-					if (video_choice == def_video) {
+					if (video_choice.find(def_video) != string::npos) {
 						safe_video = true;
 						break;
 					}
@@ -5506,7 +5506,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		systemConfiguration->addSaveFunc([mWindow, video_changed] {
 			video_changed();
 		});
-	}
+	}*/
 	#endif
 	#ifdef _ENABLEEMUELEC
 	
@@ -6244,7 +6244,7 @@ bool sortResolutions (std::string a, std::string b) {
 	return (ia < ib);
 }
 
-std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createNativeVideoResolutionModeOptionList(Window *window, std::string configname)
+/*std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createNativeVideoResolutionModeOptionList(Window *window, std::string configname)
 {
 	auto emuelec_video_mode = std::make_shared< OptionListComponent<std::string> >(window, "NATIVE VIDEO", false);
 	std::vector<std::string> videomode;
@@ -6279,6 +6279,8 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createNativeVideoReso
 
 	return emuelec_video_mode;
 }
+*/
+
 #endif
 
 

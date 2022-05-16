@@ -526,25 +526,28 @@ void GuiGameOptions::createMultidisc(FileData* file)
 	std::string newFileName;
 	getline(ss, newFileName); 
 
-	FileData* newFile = nullptr;
+	if (newFileName.empty())
+		return;
+
+	/*FileData* newFile = nullptr;
 	if (!newFileName.empty())
 	{
 		newFile = new FileData(GAME, newFileName, sourceFile->getSystem());
 		newFile->setParent(sourceFile->getParent());
 	}
 
-	if (newFile == nullptr) return;
+	if (newFile == nullptr) return;*/
 	
 	
 	auto sys = sourceFile->getSystem();
-	if (sys->isGroupChildSystem())
-		sys = sys->getParentGroupSystem();
+	//if (sys->isGroupChildSystem())
+		//sys = sys->getParentGroupSystem();
 
 	//CollectionSystemManager::get()->refreshCollectionSystems(newFile);
-	ViewController::get()->reloadGameListView(sys);
-	//auto view = ViewController::get()->getGameListView(sys, false);
-	//if (view != nullptr)
-		
+	
+	auto view = ViewController::get()->getGameListView(sys, false);
+	if (view != nullptr)
+			ViewController::get()->reloadGameListView(view);
 	//else
 	//{
 		//sys->getRootFolder()->addChild(newFile);

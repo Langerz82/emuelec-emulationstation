@@ -521,6 +521,7 @@ void GuiGameOptions::createMultidisc(FileData* file)
 
 	std::string args = "createMultidisc \""+sourceFile->getSystemName()+"\" \""+sourceFile->getName()+"\"";
 	args="(/usr/bin/emuelec-utils "+args+")";
+	LOG(LogInfo) << "createMultidisc:" << args;
 	std::stringstream ss(getShOutput(&args));
 	std::string newFileName;
 	getline(ss, newFileName); 

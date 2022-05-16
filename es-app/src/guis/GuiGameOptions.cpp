@@ -26,6 +26,7 @@
 #include "SaveStateRepository.h"
 #include "guis/GuiSaveState.h"
 #include "SystemConf.h"
+#include "platform.h"
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),
 	mMenu(window, game->getName()), mReloadAll(false)
@@ -518,9 +519,11 @@ void GuiGameOptions::createMultidisc(FileData* file)
 	auto sourceFile = file->getSourceFileData();
 
 	std::string args = "createMultidisc \""+sourceFile.getSystem()+"\" \""+sourceFile.getName()+"\"";
-	std::string newFileName = runSystemCommand("/usr/bin/emuelec-utils.sh "+args, "", nullptr);
+	std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils.sh "+args+")"));
+	getline(ss, newFileName, ','); 
+
 	FileData* newFile = nullptr;
-	if (newFileName != sourceFile->getPath())
+	if (!newFileName.empty() && newFileName != sourceFile->getPath())
 		newFile = new FileData(GAME, newFileName, sourceFile->getSystem());
 
 	if (newFile == nullptr) return;

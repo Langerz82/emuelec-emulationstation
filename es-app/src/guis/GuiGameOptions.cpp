@@ -244,6 +244,25 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 
 			});
 		}
+		
+#ifdef _ENABLEEMUELEC
+	std::regex str_expr (".*(disc\\s*\\d)[^\\d]{0,1}.*", std::regex_constants::icase);
+	if (std::regex_match(game->getName(),str_expr))
+		mMenu.addEntry(isImageViewer ? _("CREATE MULTIDISC") : _("CREATE MULTIDISC"), false, [this, game]
+		{
+			mWindow->pushGui(new GuiMsgBox(mWindow, _("THIS WILL CREATE A MULTI-DISC FILE(S)!\nARE YOU SURE?"), _("YES"),
+				[this, game]
+			{
+				createMultidisc(game);
+				close();
+			},
+				_("NO"), nullptr));
+
+
+		});
+
+#endif
+	
 	}
 
 	bool isCustomCollection = (mSystem->isCollection() && game->getType() == FOLDER && CollectionSystemManager::get()->isCustomCollection(mSystem->getName()));
@@ -488,6 +507,40 @@ void GuiGameOptions::deleteGame(FileData* file)
 		delete sourceFile;
 	}
 }
+
+#ifdef _ENABLEEMUELEC
+
+void GuiGameOptions::createMultidisc(FileData* file)
+{
+	if (file->getType() != GAME)
+		return;
+
+	auto sourceFile = file->getSourceFileData();
+
+	std::string args = "createMultidisc \""+sourceFile.getSystem()+"\" \""+sourceFile.getName()+"\"";
+	std::string newFileName = runSystemCommand("/usr/bin/emuelec-utils.sh "+args, "", nullptr);
+	FileData* newFile = nullptr;
+	if (newFileName != sourceFile->getPath())
+		newFile = new FileData(GAME, newFileName, sourceFile->getSystem());
+
+	if (newFile == nullptr) return;
+	
+	auto sys = newFile->getSystem();
+	if (sys->isGroupChildSystem())
+		sys = sys->getParentGroupSystem();
+
+	CollectionSystemManager::get()->refreshCollectionSystems(newFile);
+	
+	auto view = ViewController::get()->getGameListView(sys, false);
+	if (view != nullptr)
+		view.get()->repopulate();
+	else
+	{
+		sys->getRootFolder()->addChild(newFile);
+	}
+}
+
+#endif
 
 void GuiGameOptions::openMetaDataEd()
 {

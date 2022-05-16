@@ -540,14 +540,16 @@ void GuiGameOptions::createMultidisc(FileData* file)
 	
 	
 	auto sys = sourceFile->getSystem();
-	//if (sys->isGroupChildSystem())
-		//sys = sys->getParentGroupSystem();
+	if (sys->isGroupChildSystem())
+		sys = sys->getParentGroupSystem();
 
-	//CollectionSystemManager::get()->refreshCollectionSystems(newFile);
+	//CollectionSystemManager::get()->refreshCollectionSystems();
+	
 	
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr)
 			view.get()->repopulate();
+	ViewController::get()->reloadGameListView(sys);
 	//else
 	//{
 		//sys->getRootFolder()->addChild(newFile);

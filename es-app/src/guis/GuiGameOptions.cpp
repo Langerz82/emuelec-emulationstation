@@ -522,10 +522,10 @@ void GuiGameOptions::createMultidisc(FileData* file)
 	std::string args = "createMultidisc \""+sourceFile->getSystemName()+"\" \""+sourceFile->getName()+"\"";
 	std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils "+args+")"));
 	std::string newFileName;
-	getline(ss, newFileName, ','); 
+	std::string::getline(ss, newFileName); 
 
 	FileData* newFile = nullptr;
-	if (!newFileName.empty() && newFileName != sourceFile->getPath())
+	if (!newFileName.empty())
 		newFile = new FileData(GAME, newFileName, sourceFile->getSystem());
 
 	if (newFile == nullptr) return;
@@ -535,7 +535,7 @@ void GuiGameOptions::createMultidisc(FileData* file)
 		sys = sys->getParentGroupSystem();
 
 	CollectionSystemManager::get()->refreshCollectionSystems(newFile);
-	
+
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr)
 		view.get()->repopulate();

@@ -154,11 +154,11 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 #ifdef _ENABLEEMUELEC
 				GuiSaveState* gss = new GuiSaveState(mWindow, game, [this, game, gss](SaveState state)
 				{			
-					if ((int)state == -3)) {
+					if (state.slot == -3)) {
 						gss->UseGamesCloud(1);
 						return;
 					}
-					if ((int)state == -4) {
+					if (state.slot == -4) {
 						gss->UseGamesCloud(2);
 						return;
 					}

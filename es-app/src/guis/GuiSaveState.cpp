@@ -102,7 +102,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 }
 
 #ifdef _ENABLEEMUELEC
-void GuiSaveState::UseGamesCloud(int code) 
+void GuiSaveState::useGamesCloud(int code) 
 {
 	std::string action; 
 	if (code==1)

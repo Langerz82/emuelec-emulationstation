@@ -160,7 +160,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 						return true;
 					}));
-			}));
+			});
 			if (SaveStateRepository::isEnabled(game)) {
 				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this, sysName]
 				{
@@ -177,7 +177,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 							options.saveStateInfo = SaveState(-1);
 							ViewController::get()->launch(game, options);
 						}));
-				}
+				});
 			}
 		}
 #endif			

@@ -106,7 +106,7 @@ void GuiSaveState::loadGrid()
 #ifdef _ENABLEEMUELEC
 	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
 	if (rcloneEnabled) {
-		std::string sysName = mGame->getSourceFileData()->getSystem().getName();
+		std::string sysName = mGame->getSourceFileData()->getSystem()->getName();
 		std::string sysGamePathName = Utils::FileSystem::getStem(mGame->getPath());
 		runSystemCommand("/usr/bin/rclone_get.sh "+sysName+" \""+sysGamePathName+"\"", "", nullptr);
 		mRepository->refresh();	

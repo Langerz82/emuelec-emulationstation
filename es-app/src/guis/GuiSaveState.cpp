@@ -101,24 +101,6 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	centerWindow();
 }
 
-#ifdef _ENABLEEMUELEC
-void GuiSaveState::useGamesCloud(int code) 
-{
-	std::string action; 
-	if (code==1)
-		action="get";
-	if (code==2)
-		action="set";
-
-	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
-	if (rcloneEnabled) {
-		std::string sysName = mGame->getSourceFileData()->getSystem()->getName();
-		runSystemCommand("ra_rclone.sh "+action+" \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
-		loadGrid();
-	}
-}
-#endif
-
 void GuiSaveState::loadGrid()
 {
 	bool incrementalSaveStates = SystemConf::getIncrementalSaveStates();

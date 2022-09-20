@@ -147,35 +147,50 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 	{
 		mMenu.addGroup(_("GAME"));
 
+#ifdef _ENABLEEMUELEC
+		bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
+		std::string sysName = game->getSourceFileData()->getSystem()->getName();
+		if (rcloneEnabled) {
+			mMenu.addEntry(_("SAVE TO CLOUD"), false, [window, game, this]
+			{
+				runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+				mWindow->pushGui(new GuiLoading<bool>(mWindow, _("PLEASE WAIT"),
+					[this, window](auto gui)
+					{
+						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+					}));
+			}
+			if (SaveStateRepository::isEnabled(game)) {
+				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this]
+				{
+					runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+					mWindow->pushGui(new GuiLoading<bool>(mWindow, _("PLEASE WAIT"),
+						[this, window](auto gui)
+						{
+							runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+							return true;
+						},
+						[this, window](bool ret)
+						{
+							LaunchGameOptions options;
+							options.saveStateInfo = SaveState(-1);
+							ViewController::get()->launch(game, options);
+						}));
+				}
+			}
+		}
+#endif			
+
 		if (SaveStateRepository::isEnabled(game))
 		{
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
-#ifdef _ENABLEEMUELEC
-				GuiSaveState* gss = new GuiSaveState(mWindow, game, [this, game, gss](SaveState state)
-				{			
-					if (state.slot == -3) {
-						gss->useGamesCloud(1);
-						return;
-					}
-					if (state.slot == -4) {
-						gss->useGamesCloud(2);
-						return;
-					}
-
-					LaunchGameOptions options;
-					options.saveStateInfo = state;
-					ViewController::get()->launch(game, options);
-				});
-				mWindow->pushGui(gss);
-#else
 				mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
 				{
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(game, options);
 				}));
-#endif
 				this->close();
 			});
 		}

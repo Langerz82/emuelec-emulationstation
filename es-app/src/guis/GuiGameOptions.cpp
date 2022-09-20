@@ -154,7 +154,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		if (rcloneEnabled) {
 			mMenu.addEntry(_("SAVE TO CLOUD"), false, [window, game, this, sysName]
 			{
-				window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
+				window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
 					[this, window, game, sysName](auto gui)
 					{
 						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
@@ -164,13 +164,16 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			if (SaveStateRepository::isEnabled(game)) {
 				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this, sysName]
 				{
-					window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
+					window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
 						[this, window, game, sysName](auto gui)
 						{
 							runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-							LaunchGameOptions options;
-							options.saveStateInfo = SaveState(-1);
-							ViewController::get()->launch(game, options);
+							window->pushGui(new GuiSaveState(window, game, [this, game](SaveState state)
+							{
+								LaunchGameOptions options;
+								options.saveStateInfo = state;
+								ViewController::get()->launch(game, options);
+							}));
 							return true;
 						}));
 				});

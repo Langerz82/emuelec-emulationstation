@@ -158,7 +158,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 					[this, window, game, sysName](auto gui)
 					{
 						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-						return true;
+						return 0;
 					}));
 			});
 			if (SaveStateRepository::isEnabled(game)) {

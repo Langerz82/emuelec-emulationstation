@@ -155,11 +155,11 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				GuiSaveState* gss = new GuiSaveState(mWindow, game, [this, game, gss](SaveState state)
 				{			
 					if (state.slot == -3)) {
-						gss->UseGamesCloud(1);
+						gss->useGamesCloud(1);
 						return;
 					}
 					if (state.slot == -4) {
-						gss->UseGamesCloud(2);
+						gss->useGamesCloud(2);
 						return;
 					}
 

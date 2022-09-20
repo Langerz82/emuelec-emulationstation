@@ -100,6 +100,16 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 
 void GuiSaveState::loadGrid()
 {
+#ifdef _ENABLEEMUELEC
+	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
+	if (rcloneEnabled && isEnabled(game)) {
+		std::string sysName = game->getSourceFileData()->getSystem().getName();
+		std::string sysGamePathName = Utils::FileSystem::getStem(game->getPath());
+		runSystemCommand("/usr/bin/rclone_get.sh "+sysName+" \""+sysGamePathName+"\"", "", nullptr);
+		mRepository->refresh();	
+	}
+#endif
+
 	bool incrementalSaveStates = SystemConf::getIncrementalSaveStates();
 
 	mGrid->clear();

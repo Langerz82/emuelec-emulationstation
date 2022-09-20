@@ -25,15 +25,14 @@ public:
 
 	bool hitTest(int x, int y, Transform4x4f& parentTransform, std::vector<GuiComponent*>* pResult = nullptr) override;
 	bool onMouseClick(int button, bool pressed, int x, int y);
+#ifdef _ENABLEEMUELEC
+	void useGamesCloud(int code);
+#endif
 
 
 protected:
 	void centerWindow();
 	void loadGrid();
-
-#ifdef _ENABLEEMUELEC
-	void UseGamesCloud(int code);
-#endif
 
 	std::shared_ptr<ImageGridComponent<SaveState>> mGrid;
 	std::shared_ptr<ThemeData> mTheme;

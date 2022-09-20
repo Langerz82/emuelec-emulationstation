@@ -31,6 +31,10 @@ protected:
 	void centerWindow();
 	void loadGrid();
 
+#ifdef _ENABLEEMUELEC
+	void GetGamesCloud(int code);
+#endif
+
 	std::shared_ptr<ImageGridComponent<SaveState>> mGrid;
 	std::shared_ptr<ThemeData> mTheme;
 	std::shared_ptr<TextComponent>	mTitle;

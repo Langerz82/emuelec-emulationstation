@@ -101,17 +101,20 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	centerWindow();
 }
 
-void GuiSaveState::loadGrid()
-{
 #ifdef _ENABLEEMUELEC
+void GetGamesCloud(FileData* game, SaveStateRepository* repository) 
+{
 	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
 	if (rcloneEnabled) {
-		std::string sysName = mGame->getSourceFileData()->getSystem()->getName();
-		runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
-		mRepository->refresh();	
-	}
+		std::string sysName = game->getSourceFileData()->getSystem()->getName();
+		runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+		repository->refresh();	
+	}	
+}
 #endif
 
+void GuiSaveState::loadGrid()
+{
 	bool incrementalSaveStates = SystemConf::getIncrementalSaveStates();
 
 	mGrid->clear();
@@ -132,6 +135,10 @@ void GuiSaveState::loadGrid()
 		if (autoSave == states.cend())
 			mGrid->add(_("START NEW AUTO SAVE"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-1));
 	}
+
+#ifdef _ENABLEEMUELEC
+	mGrid->add(_("GET GAMES CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, GetGamesCloud(mGame, mRepository));
+#endif
 
 	for (auto item : states)
 	{

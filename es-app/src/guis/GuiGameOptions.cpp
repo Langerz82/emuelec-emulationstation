@@ -11,6 +11,7 @@
 #include "GuiMetaDataEd.h"
 #include "SystemData.h"
 #include "LocaleES.h"
+#include "guis/GuiLoading.h"
 #include "guis/GuiMenu.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopup.h"
@@ -146,6 +147,36 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 	if (game->getType() == GAME)
 	{
 		mMenu.addGroup(_("GAME"));
+
+#ifdef _ENABLEEMUELEC
+		bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
+		std::string sysName = game->getSourceFileData()->getSystem()->getName();
+		if (rcloneEnabled) {
+			mMenu.addEntry(_("SAVE TO CLOUD"), false, [window, game, this, sysName]
+			{
+				window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
+					[this, window, game, sysName](auto gui)
+					{
+						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+						return true;
+					}));
+			});
+			if (SaveStateRepository::isEnabled(game)) {
+				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this, sysName]
+				{
+					window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
+						[this, window, game, sysName](auto gui)
+						{
+							runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+							LaunchGameOptions options;
+							options.saveStateInfo = SaveState(-1);
+							ViewController::get()->launch(game, options);
+							return true;
+						}));
+				});
+			}
+		}
+#endif
 
 		if (SaveStateRepository::isEnabled(game))
 		{

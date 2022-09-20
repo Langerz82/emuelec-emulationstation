@@ -11,6 +11,7 @@
 #include "GuiMetaDataEd.h"
 #include "SystemData.h"
 #include "LocaleES.h"
+#include "guis/GuiLoading.h"
 #include "guis/GuiMenu.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopup.h"

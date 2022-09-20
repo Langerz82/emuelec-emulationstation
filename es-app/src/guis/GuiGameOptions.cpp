@@ -151,23 +151,23 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
 		std::string sysName = game->getSourceFileData()->getSystem()->getName();
 		if (rcloneEnabled) {
-			mMenu.addEntry(_("SAVE TO CLOUD"), false, [window, game, this]
+			mMenu.addEntry(_("SAVE TO CLOUD"), false, [window, game, this, sysName]
 			{
-				runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
-				mWindow->pushGui(new GuiLoading<bool>(mWindow, _("PLEASE WAIT"),
+				runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+				window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
 					[this, window](auto gui)
 					{
-						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 					}));
 			}
 			if (SaveStateRepository::isEnabled(game)) {
-				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this]
+				mMenu.addEntry(_("GET FROM CLOUD"), false, [window, game, this, sysName]
 				{
-					runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
-					mWindow->pushGui(new GuiLoading<bool>(mWindow, _("PLEASE WAIT"),
+					runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+					window->pushGui(new GuiLoading<bool>(window, _("PLEASE WAIT"),
 						[this, window](auto gui)
 						{
-							runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
+							runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 							return true;
 						},
 						[this, window](bool ret)

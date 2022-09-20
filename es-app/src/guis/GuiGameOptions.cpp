@@ -154,12 +154,12 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 #ifdef _ENABLEEMUELEC
 				GuiSaveState* gss = new GuiSaveState(mWindow, game, [this, game, gss](SaveState state)
 				{			
-					if (state == SaveState(-3)) {
-						gss->useGamesCloud(1);
+					if ((int)state == -3)) {
+						gss->UseGamesCloud(1);
 						return;
 					}
-					if (state == SaveState(-4)) {
-						gss->useGamesCloud(2);
+					if ((int)state == -4) {
+						gss->UseGamesCloud(2);
 						return;
 					}
 
@@ -170,16 +170,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				mWindow->pushGui(gss);
 #else
 				mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
-				{			
-					if ((int)state == -3) {
-						this->UseGamesCloud(1);
-						return;
-					}
-					if ((int)state == -4) {
-						this->UseGamesCloud(2);
-						return;
-					}
-
+				{
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(game, options);

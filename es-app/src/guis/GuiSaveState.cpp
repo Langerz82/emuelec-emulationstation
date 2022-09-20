@@ -102,7 +102,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 }
 
 #ifdef _ENABLEEMUELEC
-void GuiSaveState::GetGamesCloud(int code) 
+void GuiSaveState::UseGamesCloud(int code) 
 {
 	std::string action; 
 	if (code==1)
@@ -143,8 +143,8 @@ void GuiSaveState::loadGrid()
 	}
 
 #ifdef _ENABLEEMUELEC
-	mGrid->add(_("GET FROM CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, GetGamesCloud(1));
-	mGrid->add(_("SEND TO CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, GetGamesCloud(2));
+	mGrid->add(_("GET FROM CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-3));
+	mGrid->add(_("SEND TO CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-4));
 #endif
 
 	for (auto item : states)

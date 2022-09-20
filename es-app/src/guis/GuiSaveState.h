@@ -32,7 +32,7 @@ protected:
 	void loadGrid();
 
 #ifdef _ENABLEEMUELEC
-	void GetGamesCloud(int code);
+	void UseGamesCloud(int code);
 #endif
 
 	std::shared_ptr<ImageGridComponent<SaveState>> mGrid;

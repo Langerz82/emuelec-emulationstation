@@ -153,6 +153,16 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			{
 				mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
 				{
+#ifdef _ENABLEEMUELEC					
+					if (state == -3) {
+						this->UseGamesCloud(1);
+						return;
+					}
+					if (state == -4) {
+						this->UseGamesCloud(2);
+						return;
+					}
+#endif
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(game, options);

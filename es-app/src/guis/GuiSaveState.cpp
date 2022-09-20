@@ -7,6 +7,9 @@
 #include "SystemConf.h"
 #include "guis/GuiMsgBox.h"
 #include "SaveStateRepository.h"
+#ifdef _ENABLEEMUELEC
+	#include "platform.h"
+#endif
 
 #define WINDOW_HEIGHT Renderer::getScreenHeight() * 0.40f
 
@@ -102,9 +105,9 @@ void GuiSaveState::loadGrid()
 {
 #ifdef _ENABLEEMUELEC
 	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
-	if (rcloneEnabled && isEnabled(game)) {
-		std::string sysName = game->getSourceFileData()->getSystem().getName();
-		std::string sysGamePathName = Utils::FileSystem::getStem(game->getPath());
+	if (rcloneEnabled) {
+		std::string sysName = mGame->getSourceFileData()->getSystem().getName();
+		std::string sysGamePathName = Utils::FileSystem::getStem(mGame->getPath());
 		runSystemCommand("/usr/bin/rclone_get.sh "+sysName+" \""+sysGamePathName+"\"", "", nullptr);
 		mRepository->refresh();	
 	}

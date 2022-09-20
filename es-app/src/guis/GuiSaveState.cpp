@@ -112,8 +112,8 @@ void GuiSaveState::UseGamesCloud(int code)
 
 	bool rcloneEnabled = SystemConf::getInstance()->get("rclone_save") == "1";
 	if (rcloneEnabled) {
-		std::string sysName = game->getSourceFileData()->getSystem()->getName();
-		runSystemCommand("ra_rclone.sh "+action+" \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+		std::string sysName = mGame->getSourceFileData()->getSystem()->getName();
+		runSystemCommand("ra_rclone.sh "+action+" \""+sysName+"\" \""+mGame->getPath()+"\"", "", nullptr);
 		loadGrid();
 	}
 }

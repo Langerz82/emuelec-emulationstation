@@ -151,23 +151,40 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		{
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
+#ifdef _ENABLEEMUELEC
+				GuiSaveState* gss = new GuiSaveState(mWindow, game, [this, game, gss](SaveState state)
+				{			
+					if (state == SaveState(-3)) {
+						gss->UseGamesCloud(1);
+						return;
+					}
+					if (state == SaveState(-4)) {
+						gss->UseGamesCloud(2);
+						return;
+					}
+
+					LaunchGameOptions options;
+					options.saveStateInfo = state;
+					ViewController::get()->launch(game, options);
+				});
+				mWindow->pushGui(gss);
+#else
 				mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
-				{
-#ifdef _ENABLEEMUELEC					
-					if (state == -3) {
+				{			
+					if (state == SaveState(-3)) {
 						this->UseGamesCloud(1);
 						return;
 					}
-					if (state == -4) {
+					if (state == SaveState(-4)) {
 						this->UseGamesCloud(2);
 						return;
 					}
-#endif
+
 					LaunchGameOptions options;
 					options.saveStateInfo = state;
 					ViewController::get()->launch(game, options);
 				}));
-
+#endif
 				this->close();
 			});
 		}
@@ -479,6 +496,7 @@ GuiGameOptions::~GuiGameOptions()
 	for (auto it = mSaveFuncs.cbegin(); it != mSaveFuncs.cend(); it++)
 		(*it)();
 }
+
 
 std::string GuiGameOptions::getCustomCollectionName()
 {

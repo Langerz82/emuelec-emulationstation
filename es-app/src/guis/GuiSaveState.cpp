@@ -7,9 +7,6 @@
 #include "SystemConf.h"
 #include "guis/GuiMsgBox.h"
 #include "SaveStateRepository.h"
-#ifdef _ENABLEEMUELEC
-	#include "platform.h"
-#endif
 
 #define WINDOW_HEIGHT Renderer::getScreenHeight() * 0.40f
 
@@ -123,11 +120,6 @@ void GuiSaveState::loadGrid()
 		if (autoSave == states.cend())
 			mGrid->add(_("START NEW AUTO SAVE"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-1));
 	}
-
-#ifdef _ENABLEEMUELEC
-	mGrid->add(_("GET FROM CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-3));
-	mGrid->add(_("SEND TO CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-4));
-#endif
 
 	for (auto item : states)
 	{

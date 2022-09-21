@@ -158,7 +158,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 					[this, window, game, sysName](auto gui)
 					{
 						runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-						new GuiMsgBox(window, _("FINISHED"), _("OK"));						
+						window->pushGui(new GuiMsgBox(window, _("FINISHED"), _("OK")));
 						return true;
 					}));
 			});

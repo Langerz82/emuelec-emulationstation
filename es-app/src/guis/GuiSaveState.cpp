@@ -107,14 +107,15 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		EmulatorFeatures::cloudsave);
 	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 	if (canCloudSync) {
-		auto loadCloudWait = [this, window, game, system]
+		auto loadCloudWait = [this, mWindow, game, system]
 		{
-			window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-			[this, window, game, system](auto gui) {
+			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
+			[this, mWindow, game, system](auto gui) {
 				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
-				if (exitCode == 1)
-					window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
-
+				if (exitCode != 0)
+					mWindow->pushGui(new GuiMsgBox(mWindow, _("ERROR LOADING FROM CLOUD"), _("OK")));
+				else
+					mWindow->pushGui(new GuiMsgBox(mWindow, _("LOADED FROM CLOUD"), _("OK")));
 				loadGrid();
 				centerWindow();
 				return true;

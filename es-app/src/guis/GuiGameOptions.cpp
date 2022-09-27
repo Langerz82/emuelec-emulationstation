@@ -177,9 +177,10 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				[this, window, game](auto gui) {
 					std::string sysName = game->getSourceFileData()->getSystem()->getName();
 					int exitCode = runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-					if (exitCode == 1)
+					if (exitCode != 0)
 						window->pushGui(new GuiMsgBox(window, _("ERROR SAVING TO CLOUD"), _("OK")));
-					window->pushGui(new GuiMsgBox(window, _("FINISHED"), _("OK")));
+					else
+						window->pushGui(new GuiMsgBox(window, _("SAVED TO CLOUD"), _("OK")));
 					return true;
 				}));
 			};

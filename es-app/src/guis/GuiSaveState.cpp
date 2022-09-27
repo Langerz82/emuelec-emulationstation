@@ -106,7 +106,10 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		{
 			window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
 			[this, game, sysName](auto gui) {
-				runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
+				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
+				if (exitCode == 1)
+					window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
+
 				loadGrid();
 				centerWindow();
 				return true;

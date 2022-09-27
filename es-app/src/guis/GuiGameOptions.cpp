@@ -165,18 +165,20 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				ViewController::get()->launch(game, options);
 			};
 
-			auto loadCloudWait = [window, game, this, sysName, launchGameView]
+			auto loadCloudWait = [this, game, launchGameView]
 			{
 				mWindow->pushGui(new GuiSaveState(mWindow, game, launchGameView));
 				this->close();
 			};
 
-			auto saveCloudWait = [window, game, this, sysName]
+			auto saveCloudWait = [window, game, this]
 			{
 				window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
 				[this, window, game](auto gui) {
 					std::string sysName = game->getSourceFileData()->getSystem()->getName();
-					runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+					int exitCode = runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+					if (exitCode == 1)
+						window->pushGui(new GuiMsgBox(window, _("ERROR SAVING TO CLOUD"), _("OK")));
 					window->pushGui(new GuiMsgBox(window, _("FINISHED"), _("OK")));
 					return true;
 				}));
@@ -184,7 +186,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 
 			if (canCloudSync) {
 				mMenu.addEntry(_("CLOUD SAVES"), false,
-				[window, game, this, sysName, loadCloudWait, saveCloudWait]
+				[this, window, game, loadCloudWait, saveCloudWait]
 				{
 					window->pushGui(new GuiMsgBox(window, _("SELECT CLOUD ACTION"),
 						_("LOAD"), loadCloudWait, _("SAVE"), saveCloudWait));

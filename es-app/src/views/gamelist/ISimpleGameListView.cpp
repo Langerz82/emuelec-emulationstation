@@ -27,11 +27,6 @@
 #include "guis/GuiImageViewer.h"
 #include "guis/GuiGameAchievements.h"
 
-#ifdef _ENABLEEMUELEC
-	#include "guis/GuiLoading.h"
-	#include "platform.h"
-#endif
-
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mFolderPath(window), mOnExitPopup(nullptr),
 	mYButton("y"), mXButton("x"), mOKButton("OK"), mSelectButton("select")
@@ -366,28 +361,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 	if (SaveStateRepository::isEnabled(cursor))
 	{
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
-// TODOOOOOO
-#ifdef _ENABLEEMUELEC
-		FileData* game = getCursor();
-		SystemData* system = game->getSystem();
-		bool canCloudSync = system->isFeatureSupported(
-			game->getEmulator(true),
-			game->getEmulator(true), 
-			EmulatorFeatures::cloudsave);
-		canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
-		std::string sysName = system->getName();
 
-		bool wait = true;
-		auto loadCloudWait = [game, this, sysName, wait]
-		{
-			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
-			[this, game, sysName, wait](auto gui) {
-				runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-				return true;
-			}));
-		};
-		loadCloudWait();		
-#else
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 		{
 			Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -397,7 +371,6 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			ViewController::get()->launch(cursor, options);
 		}
 		));
-#endif		
 	}
 }
 

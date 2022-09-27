@@ -94,8 +94,30 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	mGrid->applyTheme(mTheme, "grid", "gamegrid", 0);
 	mGrid->setCursorChangedCallback([&](const CursorState& /*state*/) { updateHelpPrompts(); });
 
+#ifdef _ENABLEEMUELEC
+	SystemData* system = game->getSourceFileData()->getSystem();
+	bool canCloudSync = system->isFeatureSupported(
+		game->getEmulator(true),
+		game->getEmulator(true), 
+		EmulatorFeatures::cloudsave);
+	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
+	if (canCloudSync) {
+		auto loadCloudWait = [this, window, game, system]
+		{
+			window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
+			[this, game, sysName](auto gui) {
+				runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
+				loadGrid();
+				centerWindow();
+				return true;
+			}));
+		};
+		loadCloudWait();
+	}
+#else
 	loadGrid();
 	centerWindow();
+#endif
 }
 
 void GuiSaveState::loadGrid()

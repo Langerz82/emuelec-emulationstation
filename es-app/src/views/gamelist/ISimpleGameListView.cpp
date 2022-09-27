@@ -29,6 +29,7 @@
 
 #ifdef _ENABLEEMUELEC
 	#include "guis/GuiLoading.h"
+	#include "platform.h"
 #endif
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
@@ -382,25 +383,15 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
 			[this, game, sysName, wait](auto gui) {
 				runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-				/*mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
-				{
-					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
-
-					LaunchGameOptions options;
-					options.saveStateInfo = state;
-					ViewController::get()->launch(cursor, options);
-					wait = false;
-				}
-			));*/
 				return true;
 			}));
-			while (wait)
-			{
-				std::this_thread::yield();
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));				
-			}
-			loadCloudWait();
 		};
+		while (wait)
+		{
+			std::this_thread::yield();
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));				
+		}
+		loadCloudWait();		
 #else
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 		{

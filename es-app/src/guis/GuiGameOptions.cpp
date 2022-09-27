@@ -149,15 +149,15 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		mMenu.addGroup(_("GAME"));
 
 #ifdef _ENABLEEMUELEC
-		bool canCloudSync = systemData->isFeatureSupported(game->getEmulator(true),
+		bool canCloudSync = mSystem->isFeatureSupported(game->getEmulator(true),
 			game->getCore(true).empty()? game->getEmulator(true): game->getCore(true), 
-			EmulatorFeatures::cloudsync);
+			EmulatorFeatures::cloudsave);
 		canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 		std::string sysName = game->getSourceFileData()->getSystem()->getName();
 		if (canCloudSync) {
 			mMenu.addEntry(_("CLOUD SAVES"), false, [window, game, this, sysName]
 			{
-				window->pushGui(new GuiMsgBox(window, msg,
+				window->pushGui(new GuiMsgBox(window, _("SELECT CLOUD SAVE ACTION"),
 					_("LOAD"), [window, game, this, sysName] {
 						
 						window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
@@ -203,6 +203,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 								ViewController::get()->launch(game, options);
 							}));
 							this->close();
+							return true;
 						}));
 			 } else {
 #endif

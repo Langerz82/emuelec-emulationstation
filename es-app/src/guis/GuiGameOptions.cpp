@@ -178,8 +178,9 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 								}));
 								return true;
 							}));
-					 });						
+					 }));						
 			});
+		}
 #endif
 
 		if (SaveStateRepository::isEnabled(game))
@@ -212,7 +213,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				this->close();
 #ifdef _ENABLEEMUELEC
 			}
-#endif				
+#endif
 			});
 		}
 		else

@@ -148,77 +148,75 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 	{
 		mMenu.addGroup(_("GAME"));
 
-#ifdef _ENABLEEMUELEC
-		bool canCloudSync = mSystem->isFeatureSupported(game->getEmulator(true),
-			game->getCore(true).empty()? game->getEmulator(true): game->getCore(true), 
-			EmulatorFeatures::cloudsave);
-		canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
-		std::string sysName = game->getSourceFileData()->getSystem()->getName();
 		
-		auto launchGameView = [this, game](SaveState state)
+		if (SaveStateRepository::isEnabled(game))
 		{
-			LaunchGameOptions options;
-			options.saveStateInfo = state;
-			ViewController::get()->launch(game, options);
-		};
-
-		auto saveCloudWait = [window, game, this, sysName]
-		{			
-			window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-			[this, window, game, sysName](auto gui) {
-				runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-				window->pushGui(new GuiSaveState(window, game, launchGameView));
-				return true;
-			}));
-		};
-
-		auto loadCloudWait = [window, game, this, sysName]
-		{	
-			window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
-			[this, window, game, sysName](auto gui) {
-				runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-				window->pushGui(new GuiMsgBox(window, _("FINISHED"), _("OK")));
-				return true;
-			}));
-		};
-
-		if (canCloudSync) {
-			mMenu.addEntry(_("CLOUD SAVES"), false,
-			[window, game, this, sysName, loadCloudWait, saveCloudWait]
-			{
-				window->pushGui(new GuiMsgBox(window, _("SELECT CLOUD SAVE ACTION"),
-					_("LOAD"), loadCloudWait, _("SAVE"), saveCloudWait));			
-			});
-		}
-#endif
 
 #ifdef _ENABLEEMUELEC
-	mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync]
-	{
-		if (canCloudSync) 
-		{
-			saveCloudWait();
-		} else {
-			mWindow->pushGui(new GuiSaveState(mWindow, game, launchGameView));
-			this->close();
-		}
-	});
-#else
-	mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync]
-	{
-			mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
+			bool canCloudSync = mSystem->isFeatureSupported(game->getEmulator(true),
+				game->getCore(true).empty()? game->getEmulator(true): game->getCore(true), 
+				EmulatorFeatures::cloudsave);
+			canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
+			std::string sysName = game->getSourceFileData()->getSystem()->getName();
+			
+			auto launchGameView = [this, game](SaveState state)
 			{
 				LaunchGameOptions options;
 				options.saveStateInfo = state;
 				ViewController::get()->launch(game, options);
-			}));
-			this->close();
-	});
+			};
+
+			auto saveCloudWait = [window, game, this, sysName, launchGameView]
+			{			
+				window->pushGui(new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
+				[this, window, game, sysName, launchGameView](auto gui) {
+					runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+					window->pushGui(new GuiSaveState(window, game, launchGameView));
+					return true;
+				}));
+			};
+
+			auto loadCloudWait = [window, game, this, sysName]
+			{	
+				window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
+				[this, window, game, sysName](auto gui) {
+					runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+					window->pushGui(new GuiMsgBox(window, _("FINISHED"), _("OK")));
+					return true;
+				}));
+			};
+
+			if (canCloudSync) {
+				mMenu.addEntry(_("CLOUD SAVES"), false,
+				[window, game, this, sysName, loadCloudWait, saveCloudWait]
+				{
+					window->pushGui(new GuiMsgBox(window, _("SELECT CLOUD SAVE ACTION"),
+						_("LOAD"), loadCloudWait, _("SAVE"), saveCloudWait));			
+				});
+			}
+
+			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync, launchGameView]
+			{
+				if (canCloudSync) 
+				{
+					saveCloudWait();
+				} else {
+					mWindow->pushGui(new GuiSaveState(mWindow, game, launchGameView));
+					this->close();
+				}
+			});
+#else
+			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
+			{
+					mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
+					{
+						LaunchGameOptions options;
+						options.saveStateInfo = state;
+						ViewController::get()->launch(game, options);
+					}));
+					this->close();
+			});
 #endif
-
-		if (SaveStateRepository::isEnabled(game))
-		{
-
 
 		}
 		else

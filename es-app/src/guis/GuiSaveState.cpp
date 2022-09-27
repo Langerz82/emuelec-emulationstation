@@ -8,6 +8,11 @@
 #include "guis/GuiMsgBox.h"
 #include "SaveStateRepository.h"
 
+#ifdef _ENABLEEMUELEC
+	#include "guis/GuiLoading.h"
+	#include "platform.h"
+#endif
+
 #define WINDOW_HEIGHT Renderer::getScreenHeight() * 0.40f
 
 static int slots = 6; // 5;

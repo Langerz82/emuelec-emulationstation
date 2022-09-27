@@ -195,7 +195,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				});
 			}
 
-			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync, launchGameView]
+			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync, launchGameView, saveCloudWait]
 			{
 				if (canCloudSync) 
 				{

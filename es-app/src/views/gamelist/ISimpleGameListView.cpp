@@ -27,6 +27,10 @@
 #include "guis/GuiImageViewer.h"
 #include "guis/GuiGameAchievements.h"
 
+#ifdef _ENABLEEMUELEC
+	#include "guis/GuiLoading.h"
+#endif
+
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mFolderPath(window), mOnExitPopup(nullptr),
 	mYButton("y"), mXButton("x"), mOKButton("OK"), mSelectButton("select")
@@ -373,7 +377,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 		std::string sysName = system->getName();
 
 		bool wait = true;
-		auto loadCloudWait = [game, this, sysName, launchGameView]
+		auto loadCloudWait = [game, this, sysName, wait]
 		{
 			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
 			[this, game, sysName, wait](auto gui) {
@@ -395,6 +399,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 				std::this_thread::yield();
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));				
 			}
+			loadCloudWait();
 		};
 #else
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)

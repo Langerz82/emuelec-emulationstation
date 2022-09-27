@@ -109,7 +109,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	if (canCloudSync) {
 		auto loadCloudWait = [this, game, system]
 		{
-			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
+			auto loading = new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
 			[this, game, system](auto gui) {
 				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
 				if (exitCode != 0)
@@ -119,13 +119,17 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 				loadGrid();
 				centerWindow();
 				return true;
-			}));
+			});
+			loading->setPosition(0,0);
+			mWindow->pushGui(loading);
 		};
 		loadCloudWait();
-	}
-#else
+	} else {
+#endif
 	loadGrid();
 	centerWindow();
+#ifdef _ENABLEEMUELEC
+	}
 #endif
 }
 

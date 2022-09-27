@@ -187,7 +187,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 
 		if (SaveStateRepository::isEnabled(game))
 		{
-			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName]
+			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this, sysName, canCloudSync]
 			{
 #ifdef _ENABLEEMUELEC
 				if (canCloudSync) 

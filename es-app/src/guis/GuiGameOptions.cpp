@@ -165,9 +165,9 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 				ViewController::get()->launch(game, options);
 			};
 
-			auto loadCloudWait = [this, game, launchGameView]
+			auto loadCloudWait = [this, window, game, launchGameView]
 			{
-				mWindow->pushGui(new GuiSaveState(mWindow, game, launchGameView));
+				window->pushGui(new GuiSaveState(window, game, launchGameView));
 				this->close();
 			};
 

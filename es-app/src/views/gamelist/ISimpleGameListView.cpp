@@ -353,6 +353,7 @@ bool ISimpleGameListView::cursorHasSaveStatesEnabled()
 
 void ISimpleGameListView::showSelectedGameSaveSnapshots()
 {
+	
 	FileData* cursor = getCursor();
 	if (cursor == nullptr || cursor->getType() != GAME)
 		return;
@@ -360,7 +361,42 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 	if (SaveStateRepository::isEnabled(cursor))
 	{
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
+// TODOOOOOO
+#ifdef _ENABLEEMUELEC
+		FileData* game = getCursor();
+		SystemData* system = game->getSystem();
+		bool canCloudSync = system->isFeatureSupported(
+			game->getEmulator(true),
+			game->getEmulator(true), 
+			EmulatorFeatures::cloudsave);
+		canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
+		std::string sysName = system->getName();
 
+		bool wait = true;
+		auto loadCloudWait = [game, this, sysName, launchGameView]
+		{
+			mWindow->pushGui(new GuiLoading<bool>(mWindow, _("LOADING PLEASE WAIT"),
+			[this, game, sysName, wait](auto gui) {
+				runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
+				/*mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
+				{
+					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
+
+					LaunchGameOptions options;
+					options.saveStateInfo = state;
+					ViewController::get()->launch(cursor, options);
+					wait = false;
+				}
+			));*/
+				return true;
+			}));
+			while (wait)
+			{
+				std::this_thread::yield();
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));				
+			}
+		};
+#else
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 		{
 			Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -370,6 +406,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			ViewController::get()->launch(cursor, options);
 		}
 		));
+#endif		
 	}
 }
 

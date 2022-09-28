@@ -43,5 +43,5 @@ bool CloudSaves::isSupported(FileData* game)
 		game->getEmulator(true),
 		EmulatorFeatures::cloudsave);
 	canCloudSave = canCloudSave && SaveStateRepository::isEnabled(game);
-  return canCludSave;
+  return canCloudSave;
 }

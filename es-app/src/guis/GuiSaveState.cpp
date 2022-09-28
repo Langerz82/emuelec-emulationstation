@@ -127,7 +127,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 			});
 			loading->setPosition(0,0);
 			loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
-			
+			window->pushGui(loading);
 		};
 		loadCloudWait();
 	} else {

@@ -2,6 +2,7 @@
 
 #include "guis/GuiLoading.h"
 #include "guis/GuiMsgBox.h"
+#include "SaveStateRepository.h"
 #include "platform.h"
 
 void CloudSaves::load(Window* window, FileData *game)

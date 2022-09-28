@@ -27,9 +27,9 @@
 #include "guis/GuiImageViewer.h"
 #include "guis/GuiGameAchievements.h"
 
-#ifdef _ENABLEEMUELEC
-	#include "CloudSaves.h"
-#endif
+//#ifdef _ENABLEEMUELEC
+	//#include "CloudSaves.h"
+//#endif
 
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mFolderPath(window), mOnExitPopup(nullptr),

@@ -151,49 +151,6 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		
 		if (SaveStateRepository::isEnabled(game))
 		{
-
-#ifdef _ENABLEEMUELEC
-			bool canCloudSync = mSystem->isFeatureSupported(game->getEmulator(true),
-				game->getEmulator(true), 
-				EmulatorFeatures::cloudsave);
-			canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
-
-			auto launchGameView = [this, game](SaveState state)
-			{
-				LaunchGameOptions options;
-				options.saveStateInfo = state;
-				ViewController::get()->launch(game, options);
-			};
-
-			auto loadCloudWait = [this, window, game, launchGameView]
-			{
-				window->pushGui(new GuiSaveState(window, game, launchGameView));
-				this->close();
-			};
-
-			auto saveCloudWait = [window, game, this]
-			{
-				window->pushGui(new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
-				[this, window, game](auto gui) {
-					std::string sysName = game->getSourceFileData()->getSystem()->getName();
-					int exitCode = runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-					if (exitCode != 0)
-						window->pushGui(new GuiMsgBox(window, _("ERROR SAVING TO CLOUD"), _("OK")));
-					else
-						window->pushGui(new GuiMsgBox(window, _("SAVED TO CLOUD"), _("OK")));
-					return true;
-				}));
-			};
-
-			if (canCloudSync) {
-				mMenu.addEntry(_("CLOUD SAVES"), false,
-				[this, window, game, loadCloudWait, saveCloudWait]
-				{
-					window->pushGui(new GuiMsgBox(window, _("SELECT CLOUD ACTION"),
-						_("LOAD"), loadCloudWait, _("SAVE"), saveCloudWait));
-				});
-			}
-#endif
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
 					mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
@@ -205,7 +162,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 #ifdef _ENABLEEMUELEC
 					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
 					if (guiSaveState) guiSaveState->loadCloudSave();
-#endif			
+#endif
 					this->close();
 			});
 		}

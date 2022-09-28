@@ -27,7 +27,9 @@ public:
 	bool onMouseClick(int button, bool pressed, int x, int y);
 
 #ifdef _ENABLEEMUELEC					
-	void loadCloudSave();
+	void loadCloud();
+	void saveCloud();
+protected:
 	bool mCloudSync;
 #endif
 

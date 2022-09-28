@@ -194,7 +194,7 @@ void GuiSaveState::onSizeChanged()
 		helpSize = helpSize / mSize.y() + 0.06;
 	}
 
-	mBackground.fitTo(mSize, Vector3f::Zero(), Vector2f(-32, -32));
+	//mBackground.fitTo(mSize, Vector3f::Zero(), Vector2f(-32, -32));
 
 	mLayout.setColWidthPerc(0, 0.01);
 	mLayout.setColWidthPerc(2, 0.01);
@@ -207,7 +207,7 @@ void GuiSaveState::onSizeChanged()
 	mLayout.setRowHeightPerc(2, 0.02);
 	mLayout.setRowHeightPerc(4, helpSize );
 
-	mLayout.setSize(mSize);
+	//mLayout.setSize(mSize);
 }
 
 void GuiSaveState::centerWindow()

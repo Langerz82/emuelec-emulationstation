@@ -113,7 +113,7 @@ void GuiSaveState::loadGrid()
 		std::sort(states.begin(), states.end(), [](const SaveState* file1, const SaveState* file2) { return file1->slot < file2->slot; });
 
 #ifdef _ENABLEEMUELEC
-	if (CloudSaves::isSupported(mGame))
+	if (CloudSaves::getInstance().isSupported(mGame))
 		mGrid->add(_("SAVE TO CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-3));
 #endif
 
@@ -201,7 +201,7 @@ bool GuiSaveState::input(InputConfig* config, Input input)
 			const SaveState& item = mGrid->getSelected();
 #ifdef _ENABLEEMUELEC
 			if (item.slot == -3)
-				CloudSaves::save(mWindow, mGame);
+				CloudSaves::getInstance().save(mWindow, mGame);
 			return false;
 #endif
 			mRunCallback(item);

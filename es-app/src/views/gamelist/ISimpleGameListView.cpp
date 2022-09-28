@@ -27,6 +27,10 @@
 #include "guis/GuiImageViewer.h"
 #include "guis/GuiGameAchievements.h"
 
+#ifdef _ENABLEEMUELEC
+	#include "services/CloudSaves.h"
+#endif
+
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mFolderPath(window), mOnExitPopup(nullptr),
 	mYButton("y"), mXButton("x"), mOKButton("OK"), mSelectButton("select")
@@ -362,6 +366,10 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 	{
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
 
+		#ifdef _ENABLEEMUELEC
+			if (CloudSaves::isSupported(game)) CloudSaves::load(mWindow, cursor);
+		#endif
+
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 		{
 			Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -370,13 +378,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			options.saveStateInfo = state;
 			ViewController::get()->launch(cursor, options);
 		}
-		));
-
-#ifdef _ENABLEEMUELEC
-		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-		if (guiSaveState) guiSaveState->loadCloud();
-#endif
-		
+		));		
 	}
 }
 
@@ -409,6 +411,10 @@ void ISimpleGameListView::launchSelectedGame()
 			if (SaveStateRepository::isEnabled(cursor) &&
 				(cursor->getCurrentGameSetting("savestates") == "1" || (cursor->getCurrentGameSetting("savestates") == "2" && cursor->getSourceFileData()->getSystem()->getSaveStateRepository()->hasSaveStates(cursor))))
 			{
+				#ifdef _ENABLEEMUELEC
+					if (CloudSaves::isSupported(game)) CloudSaves::load(mWindow, cursor);
+				#endif
+				
 				mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 				{
 					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -418,10 +424,6 @@ void ISimpleGameListView::launchSelectedGame()
 					ViewController::get()->launch(cursor, options);
 				}
 				));
-#ifdef _ENABLEEMUELEC
-				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-				if (guiSaveState) guiSaveState->loadCloud();
-#endif			
 			}
 			else
 			{

@@ -29,8 +29,9 @@
 #include "SystemConf.h"
 
 #ifdef _ENABLEEMUELEC
-#include <regex>
-#include "platform.h"
+	#include <regex>
+	#include "platform.h"
+	#include "CloudSaves.h"
 #endif
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),

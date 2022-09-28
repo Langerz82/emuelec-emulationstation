@@ -109,7 +109,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 	if (canCloudSync) {
 		GuiComponent* currentGui = window->peekGui();
-		window->removeGui();
+		window->removeGui(currentGui);
 		auto loadCloudWait = [this, window, game, system, currentGui]
 		{
 			auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),

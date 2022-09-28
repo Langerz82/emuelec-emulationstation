@@ -36,7 +36,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		if (canCloudSync) {
 			//GuiComponent* currentGui = window->peekGui();
 			//window->removeGui(currentGui);
-			setVisible(false);
+			//setVisible(false);
 			setPosition(0,0);
 			//bool wait=true;
 			auto loadCloudWait = [this, window, game, system]
@@ -50,7 +50,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 					else
 						window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
 					//window->pushGui(currentGui);
-					setVisible(true);
+					//setVisible(true);
 					return true;
 				});
 			};

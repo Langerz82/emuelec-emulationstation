@@ -161,7 +161,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 					}));
 #ifdef _ENABLEEMUELEC
 					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-					if (guiSaveState) guiSaveState->loadCloudSave();
+					if (guiSaveState) guiSaveState->loadCloud();
 #endif
 					this->close();
 			});

@@ -26,6 +26,11 @@ public:
 	bool hitTest(int x, int y, Transform4x4f& parentTransform, std::vector<GuiComponent*>* pResult = nullptr) override;
 	bool onMouseClick(int button, bool pressed, int x, int y);
 
+#ifdef _ENABLEEMUELEC					
+	void loadCloudSave();
+	bool mCloudSync;
+#endif
+
 
 protected:
 	void centerWindow();

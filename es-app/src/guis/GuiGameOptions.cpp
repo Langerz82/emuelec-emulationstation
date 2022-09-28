@@ -202,6 +202,10 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 						options.saveStateInfo = state;
 						ViewController::get()->launch(game, options);
 					}));
+#ifdef _ENABLEEMUELEC
+					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
+					if (guiSaveState > 0)guiSaveState->loadCloudSave();
+#endif			
 					this->close();
 			});
 		}

@@ -113,7 +113,6 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		//GuiComponent* currentGui = this;
 		auto loadCloudWait = [this, window, game, system]
 		{
-			
 			auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
 			[this, window, game, system](auto gui) {
 				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
@@ -127,7 +126,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 				return true;
 			}, 
 			[this, window](GuiLoading<bool> loading) {
-				loading.setPosition(0,0)
+				loading.setPosition(0,0);
 				loading.setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
 			});
 		};

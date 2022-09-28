@@ -10,6 +10,10 @@
 #include "components/TextComponent.h"
 #include "SaveState.h"
 
+#ifdef _ENABLEEMUELEC
+	#include "CloudSaves.h"
+#endif
+
 class ThemeData;
 class FileData;
 class SaveStateRepository;

@@ -31,7 +31,6 @@
 #ifdef _ENABLEEMUELEC
 #include <regex>
 #include "platform.h"
-#include "services/CloudSaves.h"
 #endif
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),
@@ -154,9 +153,9 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		{
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
-				#ifdef _ENABLEEMUELEC
+#ifdef _ENABLEEMUELEC
 					if (CloudSaves::getInstance().isSupported(game)) CloudSaves::getInstance().load(window, game);
-				#endif
+#endif
 					mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
 					{
 						LaunchGameOptions options;

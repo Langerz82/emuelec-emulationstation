@@ -55,6 +55,14 @@ public:
 	GuiComponent* peekGui();
 	inline int getGuiStackSize() { return (int)mGuiStack.size(); }
 
+	inline GuiComponent* peekGui(int index)
+	{
+		if(index < 0 || index >= mGuiStack.size())
+			return NULL;
+
+		return mGuiStack[index];
+	}
+	
 	void textInput(const char* text);
 	void input(InputConfig* config, Input input);
 	void update(int deltaTime);

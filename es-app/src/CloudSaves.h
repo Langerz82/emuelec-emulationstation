@@ -18,12 +18,12 @@ class CloudSaves
       CloudSaves(CloudSaves const&);
       void operator=(CloudSaves const&);
   public:
-      CloudSaves(CloudSaves const&) = delete;
-      void operator=(CloudSaves const&) = delete;
+      //CloudSaves(CloudSaves const&) = delete;
+      //void operator=(CloudSaves const&) = delete;
 
 			void save(Window* window, FileData* game);
 			void load(Window* window, FileData* game);
-			void isSupported(FileData* game);
+			bool isSupported(FileData* game);
 };
 
 #endif

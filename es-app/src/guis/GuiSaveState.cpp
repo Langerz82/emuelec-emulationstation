@@ -32,29 +32,30 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 			game->getEmulator(true),
 			EmulatorFeatures::cloudsave);
 		canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
+		bool isLoading = true;
 		if (canCloudSync) {
 			setPosition(0,0);
 			setVisible(false);
 			setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
 			auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-			[this, window, game, system](auto gui) {
+			[this, window, game, system, isLoading](auto gui) {
 				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
 				if (exitCode != 0)
 					window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
 				else
 					window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
-				//loadGrid();
+				isLoading = false;
+				loadGrid();
+				centerWindow();				
 				setVisible(true);
-				centerWindow();
 				return true;
 			});
 			//loading->setPosition(0,0);
 			//loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
 			window->pushGui(loading);
-		} /*else {
-			loadGrid();
-			centerWindow();		
-		}*/
+		} else {
+			isLoading = false;
+		}
 	#endif
 
 	// Form background
@@ -131,11 +132,14 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	mGrid->applyTheme(mTheme, "grid", "gamegrid", 0);
 	mGrid->setCursorChangedCallback([&](const CursorState& /*state*/) { updateHelpPrompts(); });
 	
-	loadGrid();
+	
 #ifdef _ENABLEEMUELEC	
-	if (!canCloudSync)
+	if (!isLoading) {
+		loadGrid();
 		centerWindow();
+	}
 #else
+	loadGrid();
 	centerWindow();
 #endif
 }

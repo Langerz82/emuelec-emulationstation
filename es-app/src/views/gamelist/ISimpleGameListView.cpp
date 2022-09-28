@@ -370,11 +370,13 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			options.saveStateInfo = state;
 			ViewController::get()->launch(cursor, options);
 		}
+		));
+
 #ifdef _ENABLEEMUELEC
 		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
 		if (guiSaveState) guiSaveState->loadCloud();
-#endif		
-		));
+#endif
+		
 	}
 }
 

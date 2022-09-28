@@ -27,10 +27,6 @@
 #include "guis/GuiImageViewer.h"
 #include "guis/GuiGameAchievements.h"
 
-//#ifdef _ENABLEEMUELEC
-	//#include "CloudSaves.h"
-//#endif
-
 ISimpleGameListView::ISimpleGameListView(Window* window, FolderData* root, bool temporary) : IGameListView(window, root),
 	mHeaderText(window), mHeaderImage(window), mBackground(window), mFolderPath(window), mOnExitPopup(nullptr),
 	mYButton("y"), mXButton("x"), mOKButton("OK"), mSelectButton("select")
@@ -367,7 +363,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
 
 		#ifdef _ENABLEEMUELEC
-			if (CloudSaves::isSupported(game)) CloudSaves::load(mWindow, cursor);
+			if (CloudSaves::getInstance().isSupported(cursor)) CloudSaves::getInstance().load(mWindow, cursor);
 		#endif
 
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
@@ -412,7 +408,7 @@ void ISimpleGameListView::launchSelectedGame()
 				(cursor->getCurrentGameSetting("savestates") == "1" || (cursor->getCurrentGameSetting("savestates") == "2" && cursor->getSourceFileData()->getSystem()->getSaveStateRepository()->hasSaveStates(cursor))))
 			{
 				#ifdef _ENABLEEMUELEC
-					if (CloudSaves::isSupported(game)) CloudSaves::load(mWindow, cursor);
+					if (CloudSaves::getInstance().isSupported(cursor)) CloudSaves::getInstance().load(mWindow, cursor);
 				#endif
 				
 				mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)

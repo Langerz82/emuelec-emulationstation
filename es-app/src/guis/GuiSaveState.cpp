@@ -108,24 +108,24 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		EmulatorFeatures::cloudsave);
 	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 	if (canCloudSync) {
-		//setPosition(0,0);
-		//setVisible(false);
-		//GuiComponent* currentGui = this;
-			auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-			[this, window, game, system](auto gui) {
-				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
-				if (exitCode != 0)
-					window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
-				else
-					window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
-				loadGrid();
-				centerWindow();
-				//setVisible(true);
-				return true;
-			});
-			//loading->setPosition(0,0);
-			//loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
-			window->pushGui(loading);
+		setPosition(0,0);
+		setVisible(false);
+		setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+		auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
+		[this, window, game, system](auto gui) {
+			int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
+			if (exitCode != 0)
+				window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
+			else
+				window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
+			loadGrid();
+			setVisible(true);
+			centerWindow();
+			return true;
+		});
+		loading->setPosition(0,0);
+		loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+		window->pushGui(loading);
 	} else {
 		loadGrid();
 		centerWindow();		

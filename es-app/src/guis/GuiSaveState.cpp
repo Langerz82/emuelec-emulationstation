@@ -100,7 +100,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	mGrid->setCursorChangedCallback([&](const CursorState& /*state*/) { updateHelpPrompts(); });
 
 #ifdef _ENABLEEMUELEC
-	Window* win = window->peekGui(window->getGuiStackSize()-1);
+	//GuiComponent* win = window->peekGui(window->getGuiStackSize()-1);
 	SystemData* system = game->getSourceFileData()->getSystem();
 	bool canCloudSync = system->isFeatureSupported(
 		game->getEmulator(true),
@@ -108,22 +108,26 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		EmulatorFeatures::cloudsave);
 	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 	if (canCloudSync) {
-		auto loadCloudWait = [this, win, game, system]
+		GuiComponent* prevGui = win->peekGui();
+		win->removeGui();
+		auto loadCloudWait = [this, window, game, system, currentGui]
 		{
 			auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-			[this, win, game, system](auto gui) {
+			[this, window, game, system, currentGui](auto gui) {
 				int exitCode = runSystemCommand("ra_rclone.sh get \""+system->getName()+"\" \""+game->getPath()+"\"", "", nullptr);
 				if (exitCode != 0)
-					win->pushGui(new GuiMsgBox(win, _("ERROR LOADING FROM CLOUD"), _("OK")));
+					window->pushGui(new GuiMsgBox(win, _("ERROR LOADING FROM CLOUD"), _("OK")));
 				else
-					win->pushGui(new GuiMsgBox(win, _("LOADED FROM CLOUD"), _("OK")));
+					window->pushGui(new GuiMsgBox(win, _("LOADED FROM CLOUD"), _("OK")));
+				win->pushGui(currentGui);
 				loadGrid();
 				centerWindow();
 				return true;
 			});
-			#loading->setPosition(0,0);
-			#loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
+			//loading->setPosition(0,0);
+			//loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
 			win->pushGui(loading);
+			
 		};
 		loadCloudWait();
 	} else {

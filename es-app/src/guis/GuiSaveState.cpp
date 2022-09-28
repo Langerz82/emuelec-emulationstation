@@ -108,7 +108,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 		EmulatorFeatures::cloudsave);
 	canCloudSync = canCloudSync && SaveStateRepository::isEnabled(game);
 	if (canCloudSync) {
-		GuiComponent* currentGui = win->peekGui();
+		GuiComponent* currentGui = window->peekGui();
 		window->removeGui();
 		auto loadCloudWait = [this, window, game, system, currentGui]
 		{
@@ -126,7 +126,7 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 			});
 			//loading->setPosition(0,0);
 			//loading->setSize(Renderer::getScreenWidth(), Renderer::getScreenHeight());
-			win->pushGui(loading);
+			window->pushGui(loading);
 			
 		};
 		loadCloudWait();

@@ -10,6 +10,10 @@
 #include "components/TextComponent.h"
 #include "SaveState.h"
 
+#ifdef _ENABLEEMUELEC
+	#include "services/CloudSaves.h"
+#endif
+
 class ThemeData;
 class FileData;
 class SaveStateRepository;
@@ -27,10 +31,8 @@ public:
 	bool onMouseClick(int button, bool pressed, int x, int y);
 
 #ifdef _ENABLEEMUELEC					
-	void loadCloud();
-	void saveCloud();
-protected:
-	bool mCloudSync;
+	protected:
+		CloudSaves mCloudSync;
 #endif
 
 

@@ -153,16 +153,15 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		{
 			mMenu.addEntry(_("SAVE STATES"), false, [window, game, this]
 			{
+				#ifdef _ENABLEEMUELEC
+					if (CloudSaves::getInstance().isSupported(game)) CloudSaves::getInstance().load(window, game);
+				#endif
 					mWindow->pushGui(new GuiSaveState(mWindow, game, [this, game](SaveState state)
 					{
 						LaunchGameOptions options;
 						options.saveStateInfo = state;
 						ViewController::get()->launch(game, options);
 					}));
-#ifdef _ENABLEEMUELEC
-					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-					if (guiSaveState) guiSaveState->loadCloud();
-#endif
 					this->close();
 			});
 		}

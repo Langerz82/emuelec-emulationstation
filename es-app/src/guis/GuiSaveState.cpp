@@ -9,8 +9,7 @@
 #include "SaveStateRepository.h"
 
 #ifdef _ENABLEEMUELEC
-	#include "guis/GuiLoading.h"
-	#include "platform.h"
+	#include "services/CloudSaves.h"
 #endif
 
 #define WINDOW_HEIGHT Renderer::getScreenHeight() * 0.40f
@@ -99,67 +98,9 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	mGrid->applyTheme(mTheme, "grid", "gamegrid", 0);
 	mGrid->setCursorChangedCallback([&](const CursorState& /*state*/) { updateHelpPrompts(); });
 
-#ifdef _ENABLEEMUELEC
-	SystemData* system = game->getSourceFileData()->getSystem();
-	mCloudSync = system->isFeatureSupported(
-		game->getEmulator(true),
-		game->getEmulator(true),
-		EmulatorFeatures::cloudsave);
-	mCloudSync = mCloudSync && SaveStateRepository::isEnabled(game);
-	if (!mCloudSync) {
-		loadGrid();
-		centerWindow();
-	}
-#else
 	loadGrid();
 	centerWindow();
-#endif
 }
-
-#ifdef _ENABLEEMUELEC	
-void GuiSaveState::loadCloud()
-{
-	Window* window = mWindow;
-	FileData* game = mGame;
-	if (mCloudSync) {
-		auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-		[this, window, game](auto gui) {
-			std::string sysName = game->getSourceFileData()->getSystem()->getName();
-			int exitCode = runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-			if (exitCode != 0)
-				window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
-			else
-				window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
-			mRepository->refresh();
-			loadGrid();
-			return true;
-		});
-		window->pushGui(loading);
-	}
-}
-
-void GuiSaveState::saveCloud()
-{
-	Window* window = mWindow;
-	FileData* game = mGame;
-	if (mCloudSync) {
-		auto loading = new GuiLoading<bool>(window, _("SAVING PLEASE WAIT"),
-		[this, window, game](auto gui) {
-			std::string sysName = game->getSourceFileData()->getSystem()->getName();
-			int exitCode = runSystemCommand("ra_rclone.sh set \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
-			if (exitCode != 0)
-				window->pushGui(new GuiMsgBox(window, _("ERROR SAVING TO CLOUD"), _("OK")));
-			else
-				window->pushGui(new GuiMsgBox(window, _("SAVED TO CLOUD"), _("OK")));
-			mRepository->refresh();
-			loadGrid();
-			return true;
-		});
-		window->pushGui(loading);
-	}
-}
-
-#endif
 
 void GuiSaveState::loadGrid()
 {
@@ -176,7 +117,7 @@ void GuiSaveState::loadGrid()
 		std::sort(states.begin(), states.end(), [](const SaveState* file1, const SaveState* file2) { return file1->slot < file2->slot; });
 
 #ifdef _ENABLEEMUELEC
-	if (mCloudSync)
+	if (CloudSaves::isSupported(mGame))
 		mGrid->add(_("SAVE TO CLOUD"), ":/freeslot.svg", "", "", false, false, false, false, SaveState(-3));
 #endif
 
@@ -264,7 +205,7 @@ bool GuiSaveState::input(InputConfig* config, Input input)
 			const SaveState& item = mGrid->getSelected();
 #ifdef _ENABLEEMUELEC
 			if (item.slot == -3)
-			saveCloud();
+				CloudSaves::save(mWindow, mGame);
 			return false;
 #endif
 			mRunCallback(item);

@@ -4,7 +4,7 @@
 
 #include "Window.h"
 #include "FileData.h"
-#include "guis/GuiSaveState.h"
+#include "guis/GuiComponent.h"
 
 class CloudSaves
 {
@@ -26,5 +26,7 @@ class CloudSaves
         const std::function<void(GuiComponent*)>& callback);
 			bool isSupported(FileData* game);
 };
+
+extern void guiSaveStateLoad(Window* window, FileData* game);
 
 #endif

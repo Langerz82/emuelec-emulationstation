@@ -5,6 +5,20 @@
 #include "SaveStateRepository.h"
 #include "platform.h"
 
+void guiSaveStateLoad(Window* window, FileData* game)
+{
+  GuiComponent* guiComp = window->peekGui();
+  GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
+  if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
+    auto callback = [](GuiComponent* guiComp) {
+      GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
+      if (guiSaveState)
+        guiSaveState->loadGridAndCenter();
+    };
+    CloudSaves::getInstance().load(window, game, guiSaveState, callback);
+  }  
+}
+
 void CloudSaves::load(Window* window, FileData *game, GuiComponent* guiComp, const std::function<void(GuiComponent*)>& callback)
 {
   guiComp->setVisible(false);
@@ -14,8 +28,6 @@ void CloudSaves::load(Window* window, FileData *game, GuiComponent* guiComp, con
 		int exitCode = runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 		if (exitCode != 0)
 			window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
-		else
-			window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
     guiComp->setVisible(true);
     callback(guiComp);
 		return true;

@@ -5,16 +5,18 @@
 #include "SaveStateRepository.h"
 #include "platform.h"
 
-void CloudSaves::load(Window* window, FileData *game, const std::function<void(void)>& callback)
+void CloudSaves::load(Window* window, FileData *game, GuiSaveState* guiSaveState, const std::function<void(void)>& callback)
 {
+  guiSaveState->setVisible(false)
 	auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-	[this, window, game, callback](auto gui) {
+	[this, window, game, guiSaveState, callback](auto gui) {
 		std::string sysName = game->getSourceFileData()->getSystem()->getName();
 		int exitCode = runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 		if (exitCode != 0)
 			window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
 		else
 			window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
+    guiSaveState->setVisible(false)
     callback();
 		return true;
 	});

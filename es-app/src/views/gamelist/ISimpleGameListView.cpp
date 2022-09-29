@@ -378,7 +378,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			auto callback = [guiSaveState] {
 				guiSaveState->loadGridAndCenter();
 			};
-			CloudSaves::getInstance().load(mWindow, cursor, callback);
+			CloudSaves::getInstance().load(mWindow, cursor, guiSaveState, callback);
 		}
 #endif
 	}
@@ -430,7 +430,7 @@ void ISimpleGameListView::launchSelectedGame()
 					auto callback = [guiSaveState] {
 						guiSaveState->loadGridAndCenter();
 					};
-					CloudSaves::getInstance().load(mWindow, cursor, callback);
+					CloudSaves::getInstance().load(mWindow, cursor, guiSaveState, callback);
 				}
 #endif
 

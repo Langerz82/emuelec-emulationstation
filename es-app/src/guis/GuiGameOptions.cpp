@@ -165,7 +165,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 						auto callback = [guiSaveState] {
 							guiSaveState->loadGridAndCenter();
 						};
-						CloudSaves::getInstance().load(window, game, callback);
+						CloudSaves::getInstance().load(window, game, guiSaveState, callback);
 					}
 #endif
 					this->close();

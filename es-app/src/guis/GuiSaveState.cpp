@@ -94,8 +94,15 @@ GuiSaveState::GuiSaveState(Window* window, FileData* game, const std::function<v
 	mGrid->applyTheme(mTheme, "grid", "gamegrid", 0);
 	mGrid->setCursorChangedCallback([&](const CursorState& /*state*/) { updateHelpPrompts(); });
 
+#ifdef _ENABLEEMUELEC
+	if (!CloudSaves::getInstance().isSupported()) {
+		loadGrid();
+		centerWindow();	
+	}
+#else
 	loadGrid();
 	centerWindow();
+#endif
 }
 
 void GuiSaveState::loadGrid()

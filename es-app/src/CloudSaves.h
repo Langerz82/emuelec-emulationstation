@@ -20,9 +20,8 @@ class CloudSaves
   public:
       //CloudSaves(CloudSaves const&) = delete;
       //void operator=(CloudSaves const&) = delete;
-
 			void save(Window* window, FileData* game);
-			void load(Window* window, FileData* game);
+			void load(Window* window, FileData* game,const std::function<void(void)>& callback);
 			bool isSupported(FileData* game);
 };
 

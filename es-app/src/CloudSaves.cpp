@@ -5,7 +5,7 @@
 #include "SaveStateRepository.h"
 #include "platform.h"
 
-void CloudSaves::load(Window* window, FileData *game)
+void CloudSaves::load(Window* window, FileData *game, const std::function<void(void)>& callback)
 {
 	auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
 	[this, window, game](auto gui) {
@@ -15,6 +15,7 @@ void CloudSaves::load(Window* window, FileData *game)
 			window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
 		else
 			window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
+    callback();
 		return true;
 	});
 	window->pushGui(loading);

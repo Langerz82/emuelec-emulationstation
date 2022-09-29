@@ -4,6 +4,7 @@
 
 #include "Window.h"
 #include "FileData.h"
+#include "guis/GuiSaveState.h"
 
 class CloudSaves
 {
@@ -21,7 +22,7 @@ class CloudSaves
       //CloudSaves(CloudSaves const&) = delete;
       //void operator=(CloudSaves const&) = delete;
 			void save(Window* window, FileData* game);
-			void load(Window* window, FileData* game,const std::function<void(void)>& callback);
+			void load(Window* window, FileData* game, GuiSaveState* guiSaveState, const std::function<void(void)>& callback);
 			bool isSupported(FileData* game);
 };
 

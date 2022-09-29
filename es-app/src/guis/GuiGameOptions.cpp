@@ -11,7 +11,6 @@
 #include "GuiMetaDataEd.h"
 #include "SystemData.h"
 #include "LocaleES.h"
-#include "guis/GuiLoading.h"
 #include "guis/GuiMenu.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopup.h"
@@ -29,8 +28,8 @@
 #include "SystemConf.h"
 
 #ifdef _ENABLEEMUELEC
-	#include <regex>
-	#include "platform.h"
+#include <regex>
+#include "platform.h"
 #endif
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),

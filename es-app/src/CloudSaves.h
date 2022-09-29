@@ -15,16 +15,14 @@ class CloudSaves
       return instance;
     }
   private:
-      CloudSaves() {}
-      CloudSaves(CloudSaves const&);
-      void operator=(CloudSaves const&);
+    CloudSaves() {}
+    CloudSaves(CloudSaves const&);
+    void operator=(CloudSaves const&);
   public:
-      //CloudSaves(CloudSaves const&) = delete;
-      //void operator=(CloudSaves const&) = delete;
-			void save(Window* window, FileData* game);
-      void load(Window* window, FileData *game, GuiComponent* guiComp,
-        const std::function<void(GuiComponent*)>& callback);
-			bool isSupported(FileData* game);
+    void save(Window* window, FileData* game);
+    void load(Window* window, FileData *game, GuiComponent* guiComp,
+    const std::function<void(GuiComponent*)>& callback);
+    bool isSupported(FileData* game);
 };
 
 extern void guiSaveStateLoad(Window* window, FileData* game);

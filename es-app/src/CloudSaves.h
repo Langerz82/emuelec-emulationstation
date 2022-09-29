@@ -4,7 +4,7 @@
 
 #include "Window.h"
 #include "FileData.h"
-#include "guis/GuiComponent.h"
+#include "GuiComponent.h"
 
 class CloudSaves
 {

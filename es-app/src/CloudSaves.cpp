@@ -16,7 +16,7 @@ void CloudSaves::load(Window* window, FileData *game, GuiComponent* guiComp, con
 			window->pushGui(new GuiMsgBox(window, _("ERROR LOADING FROM CLOUD"), _("OK")));
 		else
 			window->pushGui(new GuiMsgBox(window, _("LOADED FROM CLOUD"), _("OK")));
-    guiComp->setVisible(false);
+    guiComp->setVisible(true);
     callback(guiComp);
 		return true;
 	});

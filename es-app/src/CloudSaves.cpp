@@ -8,7 +8,7 @@
 void CloudSaves::load(Window* window, FileData *game, const std::function<void(void)>& callback)
 {
 	auto loading = new GuiLoading<bool>(window, _("LOADING PLEASE WAIT"),
-	[this, window, game](auto gui) {
+	[this, window, game, callback](auto gui) {
 		std::string sysName = game->getSourceFileData()->getSystem()->getName();
 		int exitCode = runSystemCommand("ra_rclone.sh get \""+sysName+"\" \""+game->getPath()+"\"", "", nullptr);
 		if (exitCode != 0)

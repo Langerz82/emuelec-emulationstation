@@ -159,16 +159,16 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 						options.saveStateInfo = state;
 						ViewController::get()->launch(game, options);
 					}));
-					#ifdef _ENABLEEMUELEC
-										GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-										if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-											auto callback = [guiSaveState] {
-												guiSaveState->loadGrid();
-												guiSaveState->centerWindow();
-											};
-											CloudSaves::getInstance().load(window, game, );
-										}
-					#endif					
+#ifdef _ENABLEEMUELEC
+					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
+					if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
+						auto callback = [guiSaveState] {
+							guiSaveState->loadGrid();
+							guiSaveState->centerWindow();
+						};
+						CloudSaves::getInstance().load(window, game, callback);
+					}
+#endif
 					this->close();
 			});
 		}

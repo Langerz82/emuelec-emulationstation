@@ -362,17 +362,6 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 	{
 		Sound::getFromTheme(mTheme, getName(), "menuOpen")->play();
 
-#ifdef _ENABLEEMUELEC
-		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-		if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-			auto callback = [guiSaveState] {
-				guiSaveState->loadGrid();
-				guiSaveState->centerWindow();
-			};
-			CloudSaves::getInstance().load(window, game, );
-		}
-#endif					
-
 		mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 		{
 			Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -381,7 +370,18 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 			options.saveStateInfo = state;
 			ViewController::get()->launch(cursor, options);
 		}
-		));		
+		));
+		
+		#ifdef _ENABLEEMUELEC
+				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
+				if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
+					auto callback = [guiSaveState] {
+						guiSaveState->loadGrid();
+						guiSaveState->centerWindow();
+					};
+					CloudSaves::getInstance().load(window, game, );
+				}
+		#endif		
 	}
 }
 
@@ -414,17 +414,7 @@ void ISimpleGameListView::launchSelectedGame()
 			if (SaveStateRepository::isEnabled(cursor) &&
 				(cursor->getCurrentGameSetting("savestates") == "1" || (cursor->getCurrentGameSetting("savestates") == "2" && cursor->getSourceFileData()->getSystem()->getSaveStateRepository()->hasSaveStates(cursor))))
 			{
-#ifdef _ENABLEEMUELEC
-				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
-				if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-					auto callback = [guiSaveState] {
-						guiSaveState->loadGrid();
-						guiSaveState->centerWindow();
-					};
-					CloudSaves::getInstance().load(window, game, );
-				}
-#endif					
-				
+
 				mWindow->pushGui(new GuiSaveState(mWindow, cursor, [this, cursor](SaveState state)
 				{
 					Sound::getFromTheme(getTheme(), getName(), "launch")->play();
@@ -434,6 +424,18 @@ void ISimpleGameListView::launchSelectedGame()
 					ViewController::get()->launch(cursor, options);
 				}
 				));
+
+				#ifdef _ENABLEEMUELEC
+								GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
+								if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
+									auto callback = [guiSaveState] {
+										guiSaveState->loadGrid();
+										guiSaveState->centerWindow();
+									};
+									CloudSaves::getInstance().load(window, game, );
+								}
+				#endif
+
 			}
 			else
 			{

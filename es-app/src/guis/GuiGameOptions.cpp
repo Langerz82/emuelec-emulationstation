@@ -164,7 +164,8 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 					if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
 						auto callback = [](GuiComponent* guiComp) {
-							guiComp->loadGridAndCenter();
+							GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
+							guiSaveState->loadGridAndCenter();
 						};
 						CloudSaves::getInstance().load(window, game, guiSaveState, callback);
 					}

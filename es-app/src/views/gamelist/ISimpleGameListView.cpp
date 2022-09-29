@@ -375,7 +375,8 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 		GuiComponent* guiComp = mWindow->peekGui();
 		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 		if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-			auto callback = (guiComp) {
+			auto callback = [](GuiComponent* guiComp) {
+				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 				guiSaveState->loadGridAndCenter();
 			};
 			CloudSaves::getInstance().load(window, game, guiSaveState, callback);
@@ -427,7 +428,8 @@ void ISimpleGameListView::launchSelectedGame()
 				GuiComponent* guiComp = mWindow->peekGui();
 				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 				if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-					auto callback = (guiComp) {
+					auto callback = [](GuiComponent* guiComp) {
+						GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 						guiSaveState->loadGridAndCenter();
 					};
 					CloudSaves::getInstance().load(window, game, guiSaveState, callback);

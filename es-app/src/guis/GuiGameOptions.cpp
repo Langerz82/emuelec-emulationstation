@@ -162,7 +162,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 #ifdef _ENABLEEMUELEC
 					GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
 					if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
-						auto callback = [guiSaveState] {
+						auto callback = (guiSaveState) {
 							guiSaveState->loadGridAndCenter();
 						};
 						CloudSaves::getInstance().load(window, game, guiSaveState, callback);

@@ -375,7 +375,7 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 #ifdef _ENABLEEMUELEC
 		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
 		if (guiSaveState && CloudSaves::getInstance().isSupported(cursor)) {
-			auto callback = [guiSaveState] {
+			auto callback = (guiSaveState) {
 				guiSaveState->loadGridAndCenter();
 			};
 			CloudSaves::getInstance().load(mWindow, cursor, guiSaveState, callback);
@@ -427,7 +427,7 @@ void ISimpleGameListView::launchSelectedGame()
 #ifdef _ENABLEEMUELEC
 				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(mWindow->peekGui());
 				if (guiSaveState && CloudSaves::getInstance().isSupported(cursor)) {
-					auto callback = [guiSaveState] {
+					auto callback = (guiSaveState) {
 						guiSaveState->loadGridAndCenter();
 					};
 					CloudSaves::getInstance().load(mWindow, cursor, guiSaveState, callback);

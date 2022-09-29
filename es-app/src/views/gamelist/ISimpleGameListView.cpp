@@ -372,12 +372,15 @@ void ISimpleGameListView::showSelectedGameSaveSnapshots()
 		}
 		));
 #ifdef _ENABLEEMUELEC
+		FileData* game = cursor;
+		Window* window = mWindow;
 		GuiComponent* guiComp = mWindow->peekGui();
 		GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 		if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
 			auto callback = [](GuiComponent* guiComp) {
 				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
-				guiSaveState->loadGridAndCenter();
+				if (guiSaveState)
+					guiSaveState->loadGridAndCenter();
 			};
 			CloudSaves::getInstance().load(window, game, guiSaveState, callback);
 		}
@@ -425,12 +428,15 @@ void ISimpleGameListView::launchSelectedGame()
 				}
 				));
 #ifdef _ENABLEEMUELEC
+				FileData* game = cursor;
+				Window* window = mWindow;
 				GuiComponent* guiComp = mWindow->peekGui();
 				GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
 				if (guiSaveState && CloudSaves::getInstance().isSupported(game)) {
 					auto callback = [](GuiComponent* guiComp) {
 						GuiSaveState* guiSaveState = dynamic_cast<GuiSaveState*>(guiComp);
-						guiSaveState->loadGridAndCenter();
+						if (guiSaveState)
+							guiSaveState->loadGridAndCenter();
 					};
 					CloudSaves::getInstance().load(window, game, guiSaveState, callback);
 				}

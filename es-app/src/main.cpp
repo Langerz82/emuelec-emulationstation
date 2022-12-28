@@ -650,6 +650,9 @@ int main(int argc, char* argv[])
 
 	int lastTime = SDL_GetTicks();
 	int ps_time = SDL_GetTicks();
+#ifdef _ENABLEEMUELEC
+	int ps_bt_time = ps_time;
+#endif
 
 	bool running = true;
 
@@ -662,6 +665,13 @@ int main(int argc, char* argv[])
 		SDL_Event event;
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
+#ifdef _ENABLEEMUELEC
+		int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
+		if (ps_standby && ps_elapsed_time > 30000) {
+			ApiSystem::getInstance()->scanNewBluetooth();
+			ps_bt_time = SDL_GetTicks();
+		}
+#endif
 		if(ps_standby ? SDL_WaitEventTimeout(&event, PowerSaver::getTimeout()) : SDL_PollEvent(&event))
 		{
 			// PowerSaver can push events to exit SDL_WaitEventTimeout immediatly

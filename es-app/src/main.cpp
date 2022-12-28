@@ -670,7 +670,7 @@ int main(int argc, char* argv[])
 		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
 		if (PowerSaver::getState() && btbaseEnabled) {
 			if (!check_bt) {
-				LOG(LogInfo) << "bluetooth - ps_bt_time set";
+				LOG(LogDebug) << "bluetooth - ps_bt_time set";
 				ps_bt_time = SDL_GetTicks();
 				check_bt = true;
 			}
@@ -678,7 +678,7 @@ int main(int argc, char* argv[])
 				int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
 				if (ps_elapsed_time > 30000)
 				{
-					LOG(LogInfo) << "bluetooth - systemctl start bluetooth";
+					LOG(LogDebug) << "bluetooth - systemctl start bluetooth";
 					runSystemCommand("mkdir -p /storage/.cache/services/", "", nullptr);
 					runSystemCommand("touch /storage/.cache/services/bluez.conf", "", nullptr);					
 					runSystemCommand("systemctl start bluetooth", "", nullptr);

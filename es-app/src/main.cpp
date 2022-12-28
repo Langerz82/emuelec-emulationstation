@@ -668,7 +668,9 @@ int main(int argc, char* argv[])
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
 		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
+		LOG(LogDebug) << "bluetooth - getState - " << PowerSaver::getState() << " " << btbaseEnabled;
 		if (PowerSaver::getState() && btbaseEnabled) {
+			LOG(LogDebug) << "bluetooth - getState - true";
 			if (!check_bt) {
 				LOG(LogDebug) << "bluetooth - ps_bt_time set";
 				ps_bt_time = SDL_GetTicks();

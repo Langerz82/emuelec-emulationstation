@@ -674,7 +674,7 @@ int main(int argc, char* argv[])
 		}
 		int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
 		if (ps_standby && btbaseEnabled && ps_elapsed_time > 60000) {
-			int exitCode = atoi(runSystemCommand("[ -f /storage/.cache/services/bluez.conf ] && echo 0 || echo 1", "", nullptr));
+			int exitCode = (int) atoi(runSystemCommand("[ -f /storage/.cache/services/bluez.conf ] && echo 0 || echo 1", "", nullptr));
 			if (exitCode == 1)
 			{
 				runSystemCommand("systemctl start bluetooth", "", nullptr);

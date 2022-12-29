@@ -650,9 +650,6 @@ int main(int argc, char* argv[])
 
 	int lastTime = SDL_GetTicks();
 	int ps_time = SDL_GetTicks();
-#ifdef _ENABLEEMUELEC
-	int ps_bt_time = SDL_GetTicks();
-#endif
 
 	bool running = true;
 
@@ -667,17 +664,17 @@ int main(int argc, char* argv[])
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
 		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
-		//LOG(LogDebug) << "bluetooth - getState - " << PowerSaver::getState() << " " << btbaseEnabled;
 		if (PowerSaver::getState() && btbaseEnabled) {
 			LOG(LogDebug) << "bluetooth - getState - true";
-			int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
-			if (ps_elapsed_time > 3000)
+			std::string bt_enabled = getShOutput(R"(systemctl status bluetooth | head -n3 | grep 'Active: active')");
+			LOG(LogDebug) << "bluetooth - bt_enabled: " << bt_enabled.c_str();
+			if (bt_enabled == "")
 			{
 				LOG(LogDebug) << "bluetooth - systemctl start bluetooth";
 				runSystemCommand("mkdir -p /storage/.cache/services/", "", nullptr);
 				runSystemCommand("touch /storage/.cache/services/bluez.conf", "", nullptr);					
 				runSystemCommand("systemctl start bluetooth", "", nullptr);
-				ps_bt_time = SDL_GetTicks();
+				SDL_Delay(5000);
 			}
 		}
 #endif

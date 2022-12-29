@@ -666,6 +666,30 @@ int main(int argc, char* argv[])
 		SDL_Event event;
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
+#ifdef _ENABLEEMUELEC
+		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
+		LOG(LogDebug) << "bluetooth - getState - " << PowerSaver::getState() << " " << btbaseEnabled;
+		if (PowerSaver::getState() && btbaseEnabled) {
+			LOG(LogDebug) << "bluetooth - getState - true";
+			if (!check_bt) {
+				LOG(LogDebug) << "bluetooth - ps_bt_time set";
+				ps_bt_time = SDL_GetTicks();
+				check_bt = true;
+			}
+		 	else {
+				int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
+				if (ps_elapsed_time > 3000)
+				{
+					LOG(LogDebug) << "bluetooth - systemctl start bluetooth";
+					runSystemCommand("mkdir -p /storage/.cache/services/", "", nullptr);
+					runSystemCommand("touch /storage/.cache/services/bluez.conf", "", nullptr);					
+					runSystemCommand("systemctl start bluetooth", "", nullptr);
+					check_bt = false;
+				}
+			}
+		}
+#endif
+
 		if(ps_standby ? SDL_WaitEventTimeout(&event, PowerSaver::getTimeout()) : SDL_PollEvent(&event))
 		{
 			// PowerSaver can push events to exit SDL_WaitEventTimeout immediatly
@@ -675,30 +699,6 @@ int main(int argc, char* argv[])
 			do
 			{
 				TRYCATCH("InputManager::parseEvent", InputManager::getInstance()->parseEvent(event, &window));
-
-#ifdef _ENABLEEMUELEC
-				bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
-				LOG(LogDebug) << "bluetooth - getState - " << PowerSaver::getState() << " " << btbaseEnabled;
-				if (PowerSaver::getState() && btbaseEnabled) {
-					LOG(LogDebug) << "bluetooth - getState - true";
-					if (!check_bt) {
-						LOG(LogDebug) << "bluetooth - ps_bt_time set";
-						ps_bt_time = SDL_GetTicks();
-						check_bt = true;
-					}
-				 	else {
-						int ps_elapsed_time = SDL_GetTicks() - ps_bt_time;
-						if (ps_elapsed_time > 30000)
-						{
-							LOG(LogDebug) << "bluetooth - systemctl start bluetooth";
-							runSystemCommand("mkdir -p /storage/.cache/services/", "", nullptr);
-							runSystemCommand("touch /storage/.cache/services/bluez.conf", "", nullptr);					
-							runSystemCommand("systemctl start bluetooth", "", nullptr);
-							check_bt = false;
-						}
-					}
-				}
-#endif
 
 				if (event.type == SDL_QUIT)
 					running = false;

@@ -672,7 +672,7 @@ int main(int argc, char* argv[])
 #ifdef _ENABLEEMUELEC
 		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
 
-		if (ps_standby && btbaseEnabled && bt_pid == 0) {
+		if (ps_standby && btbaseEnabled && window.isSleeping() && bt_pid == 0) {
 			std::string outputSH = std::string(getShOutput(R"(/usr/bin/emuelec-utils run_bt)"));
 			LOG(LogDebug) << "bluetooth outputSH: " << outputSH;
 			bt_pid = atoi(outputSH.c_str());

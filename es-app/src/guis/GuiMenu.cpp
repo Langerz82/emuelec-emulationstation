@@ -538,7 +538,7 @@ void GuiMenu::openEmuELECSettings()
 	emuelec_standby_usb_def->add("20 minutes", "20", standbyUsbCfg == "20");
 	emuelec_standby_usb_def->add("30 minutes", "30", standbyUsbCfg == "30");
 
-	s->addWithLabel(_("RETROARCH MENU"), emuelec_standby_usb_def);
+	s->addWithLabel(_("STANDBY USB RESTART"), emuelec_standby_usb_def);
 	s->addSaveFunc([emuelec_standby_usb_def] {
 		if (emuelec_standby_usb_def->changed()) {
 			SystemConf::getInstance()->set("global.standbyusb", emuelec_standby_usb_def->getSelected());

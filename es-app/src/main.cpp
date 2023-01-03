@@ -670,10 +670,10 @@ int main(int argc, char* argv[])
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
-		char* standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
+		auto standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
 		if (standbyUsbCfg.empty())
 		 	standbyUsbCfg = "0";
-		int iUsbCfg = atoi(standbyUsbCfg);
+		int iUsbCfg = atoi(standbyUsbCfg.c_str());
 
 		if (ps_standby && window.isSleeping() && standby_pid == 0 && iUsbCfg > 0) {	
 			runSystemCommand("/usr/bin/emuelec-utils run_standby " + standbyUsbCfg, "", nullptr);

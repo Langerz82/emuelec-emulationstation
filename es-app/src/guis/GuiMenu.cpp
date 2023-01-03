@@ -526,11 +526,8 @@ void GuiMenu::openEmuELECSettings()
 #endif
 
 #ifdef _ENABLEEMUELEC
-	auto emuelec_retroarch_standby_usb_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "STANDBY USB RESTART", false);
-	std::vector<std::string> standbyusboptions;
-	ramenuoptions.push_back("disabled");
-	ramenuoptions.push_back("5 minutes");
-	
+	auto emuelec_standby_usb_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "STANDBY USB RESTART", false);
+
 	auto standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
 	if (standbyUsbCfg.empty())
 	standbyUsbCfg = "0";

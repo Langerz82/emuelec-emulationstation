@@ -670,7 +670,7 @@ int main(int argc, char* argv[])
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
-		std::string standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
+		char* standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
 		if (standbyUsbCfg.empty())
 		 	standbyUsbCfg = "0";
 		int iUsbCfg = atoi(standbyUsbCfg);

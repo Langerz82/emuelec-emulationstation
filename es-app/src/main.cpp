@@ -656,7 +656,7 @@ int main(int argc, char* argv[])
 	int lastTime = SDL_GetTicks();
 	int ps_time = SDL_GetTicks();
 #ifdef _ENABLEEMUELEC
-	int bt_pid = 0;
+	int standby_pid = 0;
 	//int ps_kill_time = ps_time;
 #endif
 	bool running = true;
@@ -672,16 +672,17 @@ int main(int argc, char* argv[])
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
 
-		if (ps_standby && window.isSleeping() && bt_pid == 0) {
-			std::string outputSH = std::string(getShOutput(R"(/usr/bin/emuelec-utils run_usb_reset)"));
-			LOG(LogDebug) << "bluetooth outputSH: " << outputSH;
-			bt_pid = atoi(outputSH.c_str());
-			LOG(LogDebug) << "bluetooth standby pid: " << std::to_string(bt_pid);
+		if (ps_standby && window.isSleeping() && standby_pid == 0) {
+			runSystemCommand("/usr/bin/emuelec-utils run_standby", "", nullptr);
+			std::string outputSH = std::string(getShOutput(R"(/usr/bin/cat /tmp/standby.pid)"));
+			LOG(LogDebug) << "standby outputSH: " << outputSH;
+			standby_pid = atoi(outputSH.c_str());
+			LOG(LogDebug) << "standby pid: " << std::to_string(standby_pid);
 		}
-		if (ps_standby == false && bt_pid > 0) {
-			LOG(LogDebug) << "bluetooth standby kill: " << std::to_string(bt_pid);
-			runSystemCommand("kill "+std::to_string(bt_pid), "", nullptr);
-			bt_pid = 0;
+		if (ps_standby == false && standby_pid > 0) {
+			LOG(LogDebug) << "standby kill: " << std::to_string(standby_pid);
+			runSystemCommand("kill "+std::to_string(standby_pid), "", nullptr);
+			standby_pid = 0;
 		}
 #endif
 

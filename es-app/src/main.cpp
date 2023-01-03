@@ -675,7 +675,7 @@ int main(int argc, char* argv[])
 
 		//int ps_kill_delay = SDL_GetTicks() - ps_kill_time;
 		if (ps_standby && btbaseEnabled && window.isSleeping() && bt_pid == 0 /*&& ps_kill_delay > 10000*/) {
-			runSystemCommand("/usr/bin/emuelec-utils run_usb_reset &", "", nullptr);
+			runSystemCommand("emuelec-usb-reset &", "", nullptr);
 			std::string outputSH = std::string(getShOutput(R"(echo $!)"));
 			LOG(LogDebug) << "bluetooth outputSH: " << outputSH;
 			bt_pid = atoi(outputSH.c_str());

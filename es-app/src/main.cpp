@@ -673,7 +673,7 @@ int main(int argc, char* argv[])
 #ifdef _ENABLEEMUELEC
 		bool btbaseEnabled = SystemConf::getInstance()->get("ee_bluetooth.enabled") == "1";
 
-		ps_kill_delay = SDL_GetTicks() - ps_kill_time;
+		int ps_kill_delay = SDL_GetTicks() - ps_kill_time;
 		if (ps_standby && btbaseEnabled && window.isSleeping() && bt_pid == 0 && ps_kill_delay > 10000) {
 			std::string outputSH = std::string(getShOutput(R"(/usr/bin/emuelec-utils run_usb_reset)"));
 			LOG(LogDebug) << "bluetooth outputSH: " << outputSH;

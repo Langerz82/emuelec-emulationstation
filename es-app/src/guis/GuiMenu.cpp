@@ -525,6 +525,29 @@ void GuiMenu::openEmuELECSettings()
 	s->addRow(row);
 #endif
 
+#ifdef _ENABLEEMUELEC
+	auto emuelec_retroarch_standby_usb_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "STANDBY USB RESTART", false);
+	std::vector<std::string> standbyusboptions;
+	ramenuoptions.push_back("disabled");
+	ramenuoptions.push_back("5 minutes");
+	
+	auto standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
+	if (standbyUsbCfg.empty())
+	standbyUsbCfg = "0";
+	
+	emuelec_standby_usb_def->add("disabled", "0", standbyUsbCfg == "0");
+	emuelec_standby_usb_def->add("5 minutes", "5", standbyUsbCfg == "5");
+	emuelec_standby_usb_def->add("15 minutes", "15", standbyUsbCfg == "15");
+
+	s->addWithLabel(_("RETROARCH MENU"), emuelec_standby_usb_def);
+	s->addSaveFunc([emuelec_standby_usb_def] {
+		if (emuelec_standby_usb_def->changed()) {
+			SystemConf::getInstance()->set("global.standbyusb", emuelec_standby_usb_def->getSelected());
+			SystemConf::getInstance()->saveSystemConf();
+		}
+	});
+#endif
+
 		auto emuelec_retroarch_menu_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "RETROARCH MENU", false);
 		std::vector<std::string> ramenuoptions;
 		ramenuoptions.push_back("auto");

@@ -670,14 +670,19 @@ int main(int argc, char* argv[])
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
-		if (ps_standby && window.isSleeping() && standby_pid == 0) {
-			runSystemCommand("/usr/bin/emuelec-utils run_standby", "", nullptr);
+		auto standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
+		if (standbyUsbCfg.empty())
+		 	standbyUsbCfg = 0;
+
+		if (ps_standby && window.isSleeping() && standby_pid == 0 && standbyUsbCfg > 0) {
+			
+			runSystemCommand("/usr/bin/emuelec-utils run_standby " + standbyUsbCfg, "", nullptr);
 			std::string outputSH = std::string(getShOutput(R"(/usr/bin/cat /tmp/standby.pid)"));
 			LOG(LogDebug) << "standby outputSH: " << outputSH;
 			standby_pid = atoi(outputSH.c_str());
 			LOG(LogDebug) << "standby pid: " << std::to_string(standby_pid);
 		}
-		if (!ps_standby && !window.isSleeping() && standby_pid > 0) {
+		if (!ps_standby && !window.isSleeping() && standby_pid > 0 && standbyUsbCfg > 0) {
 			LOG(LogDebug) << "standby kill: " << std::to_string(standby_pid);
 			runSystemCommand("kill "+std::to_string(standby_pid), "", nullptr);
 			standby_pid = 0;

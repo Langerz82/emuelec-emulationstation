@@ -657,7 +657,6 @@ int main(int argc, char* argv[])
 	int ps_time = SDL_GetTicks();
 #ifdef _ENABLEEMUELEC
 	int standby_pid = 0;
-	//int ps_kill_time = ps_time;
 #endif
 	bool running = true;
 
@@ -671,7 +670,6 @@ int main(int argc, char* argv[])
 
 		bool ps_standby = PowerSaver::getState() && (int) SDL_GetTicks() - ps_time > PowerSaver::getMode();
 #ifdef _ENABLEEMUELEC
-
 		if (ps_standby && window.isSleeping() && standby_pid == 0) {
 			runSystemCommand("/usr/bin/emuelec-utils run_standby", "", nullptr);
 			std::string outputSH = std::string(getShOutput(R"(/usr/bin/cat /tmp/standby.pid)"));

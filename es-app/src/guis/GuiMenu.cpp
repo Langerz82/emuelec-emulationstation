@@ -526,8 +526,18 @@ void GuiMenu::openEmuELECSettings()
 #endif
 
 #ifdef _ENABLEEMUELEC
-	auto emuelec_standby_usb_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "STANDBY USB RESTART", false);
+	auto restart_usb_enabled = std::make_shared<SwitchComponent>(mWindow);
+	bool restartUSBEnabled = SystemConf::getInstance()->get("ee_restart_usb.enabled") == "1";
+	restart_usb_enabled->setState(restartUSBEnabled);
+	s->addWithLabel(_("RESTART USB ON BOOT"), restart_usb_enabled);
+	s->addSaveFunc([restart_usb_enabled] {
+		bool restartUSBEnabled = restart_usb_enabled->getState();
+		SystemConf::getInstance()->set("ee_restart_usb.enabled", restart_usb_enabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
 
+
+	auto emuelec_standby_usb_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "STANDBY USB RESTART", false);
 	auto standbyUsbCfg = SystemConf::getInstance()->get("global.standbyusb");
 	if (standbyUsbCfg.empty())
 	standbyUsbCfg = "0";

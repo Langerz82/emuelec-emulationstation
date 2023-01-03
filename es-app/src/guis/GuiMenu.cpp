@@ -534,7 +534,9 @@ void GuiMenu::openEmuELECSettings()
 	
 	emuelec_standby_usb_def->add("disabled", "0", standbyUsbCfg == "0");
 	emuelec_standby_usb_def->add("5 minutes", "5", standbyUsbCfg == "5");
-	emuelec_standby_usb_def->add("15 minutes", "15", standbyUsbCfg == "15");
+	emuelec_standby_usb_def->add("10 minutes", "10", standbyUsbCfg == "10");
+	emuelec_standby_usb_def->add("20 minutes", "20", standbyUsbCfg == "20");
+	emuelec_standby_usb_def->add("30 minutes", "30", standbyUsbCfg == "30");
 
 	s->addWithLabel(_("RETROARCH MENU"), emuelec_standby_usb_def);
 	s->addSaveFunc([emuelec_standby_usb_def] {

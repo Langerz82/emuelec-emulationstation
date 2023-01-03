@@ -678,12 +678,12 @@ int main(int argc, char* argv[])
 		if (ps_standby && window.isSleeping() && standby_pid == 0 && iUsbCfg > 0) {	
 			runSystemCommand("/usr/bin/emuelec-utils run_standby " + standbyUsbCfg, "", nullptr);
 			std::string outputSH = std::string(getShOutput(R"(/usr/bin/cat /tmp/standby.pid)"));
-			LOG(LogDebug) << "standby outputSH: " << outputSH;
+			//LOG(LogDebug) << "standby outputSH: " << outputSH;
 			standby_pid = atoi(outputSH.c_str());
-			LOG(LogDebug) << "standby pid: " << std::to_string(standby_pid);
+			//LOG(LogDebug) << "standby pid: " << std::to_string(standby_pid);
 		}
 		if (!ps_standby && !window.isSleeping() && standby_pid > 0 && iUsbCfg > 0) {
-			LOG(LogDebug) << "standby kill: " << std::to_string(standby_pid);
+			//LOG(LogDebug) << "standby kill: " << std::to_string(standby_pid);
 			runSystemCommand("kill "+std::to_string(standby_pid), "", nullptr);
 			standby_pid = 0;
 		}

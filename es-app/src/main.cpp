@@ -682,6 +682,7 @@ int main(int argc, char* argv[])
 			LOG(LogDebug) << "bluetooth standby kill: " << std::to_string(bt_pid);
 			runSystemCommand("kill "+std::to_string(bt_pid), "", nullptr);
 			bt_pid = 0;
+			SDL_Delay(1000);
 		}
 #endif
 

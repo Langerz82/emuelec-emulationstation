@@ -679,7 +679,7 @@ int main(int argc, char* argv[])
 			standby_pid = atoi(outputSH.c_str());
 			LOG(LogDebug) << "standby pid: " << std::to_string(standby_pid);
 		}
-		if (ps_standby == false && standby_pid > 0) {
+		if (!ps_standby && !window.isSleeping() && standby_pid > 0) {
 			LOG(LogDebug) << "standby kill: " << std::to_string(standby_pid);
 			runSystemCommand("kill "+std::to_string(standby_pid), "", nullptr);
 			standby_pid = 0;

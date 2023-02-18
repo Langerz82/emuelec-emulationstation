@@ -545,16 +545,12 @@ void GuiGameOptions::hideGame(FileData* file)
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr) {
-		int index = view.get()->getCursorIndex();
-		if (index > 0)
-			view.get()->setCursorIndex(--index);
-
 		view.get()->remove(sourceFile);
 	}
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-		delete sourceFile;
+		//delete sourceFile;
 	}
 }
 

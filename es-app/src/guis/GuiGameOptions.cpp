@@ -532,8 +532,10 @@ void GuiGameOptions::hideGame(FileData* file)
 		return;
 
 	auto sourceFile = file->getSourceFileData();
-	//file->setMetadata(MetaDataId::Hidden, "true");
-	sourceFile->setMetadata(MetaDataId::Hidden, "true");
+	file->setMetadata(MetaDataId::Hidden, "true");
+	ViewController::onFileChanged, ViewController::get(), file, FILE_METADATA_CHANGED);
+	
+	//sourceFile->setMetadata(MetaDataId::Hidden, "true");
 	//sourceFile->getMetadata().resetChangedFlag();
 	//ViewController::get()->onFileChanged(sourceFile, FILE_METADATA_CHANGED);
 
@@ -542,7 +544,7 @@ void GuiGameOptions::hideGame(FileData* file)
 		sys = sys->getParentGroupSystem();
 
 	//sys->getRootFolder()->setMetadata(MetaDataId::Hidden, "true");
-	sys->getRootFolder()->getMetadata().setDirty();
+	//sys->getRootFolder()->getMetadata().setDirty();
 	
 	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
 
@@ -554,7 +556,7 @@ void GuiGameOptions::hideGame(FileData* file)
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
 		delete sourceFile;
 	}
-	ViewController::saveState();
+	//ViewController::saveState();
 }
 
 void GuiGameOptions::createMultidisc(FileData* file)

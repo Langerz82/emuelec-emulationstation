@@ -534,7 +534,7 @@ void GuiGameOptions::hideGame(FileData* file)
 	auto sourceFile = file->getSourceFileData();
 	file->setMetadata(MetaDataId::Hidden, "true");
 	sourceFile->setMetadata(MetaDataId::Hidden, "true");
-	ViewController::onFileChanged(file, FILE_METADATA_CHANGED);
+	ViewController::get()->onFileChanged(file, FILE_METADATA_CHANGED);
 
 	auto sys = sourceFile->getSystem();
 	if (sys->isGroupChildSystem())

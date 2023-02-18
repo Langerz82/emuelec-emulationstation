@@ -541,7 +541,7 @@ void GuiGameOptions::hideGame(FileData* file)
 		sys = sys->getParentGroupSystem();
 
 	//sys->getRootFolder()->setMetadata(MetaDataId::Hidden, "true");
-	sys->getRootFolder()->getMetadata().resetChangedFlag();
+	//sys->getRootFolder()->getMetadata().resetChangedFlag();
 	
 	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
 
@@ -550,7 +550,7 @@ void GuiGameOptions::hideGame(FileData* file)
 		view.get()->remove(sourceFile);
 	else
 	{
-		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
+		//sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
 		//delete sourceFile;
 	}
 }

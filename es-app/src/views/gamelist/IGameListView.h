@@ -31,10 +31,6 @@ public:
 
 	virtual FileData* getCursor() = 0;
 	virtual void setCursor(FileData*) = 0;
-#ifdef _ENABLEEMUELEC
-	virtual int getCursorIndex() =0; 
-	virtual void setCursorIndex(int index) =0;
-#endif
 
 	virtual void remove(FileData* game) = 0;
 

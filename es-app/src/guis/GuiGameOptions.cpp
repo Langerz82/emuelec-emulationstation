@@ -549,7 +549,7 @@ void GuiGameOptions::hideGame(FileData* file)
 	}
 	else
 	{
-		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
+		//sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
 		//delete sourceFile;
 	}
 }

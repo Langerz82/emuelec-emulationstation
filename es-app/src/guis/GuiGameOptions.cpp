@@ -540,7 +540,7 @@ void GuiGameOptions::hideGame(FileData* file)
 	if (sys->isGroupChildSystem())
 		sys = sys->getParentGroupSystem();
 
-	sys->getRootFolder()->setMetadata(MetaDataId::Hidden, "true");
+	//sys->getRootFolder()->setMetadata(MetaDataId::Hidden, "true");
 	sys->getRootFolder()->getMetadata().resetChangedFlag();
 	
 	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);

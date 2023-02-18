@@ -527,9 +527,9 @@ void GuiGameOptions::deleteGame(FileData* file)
 #ifdef _ENABLEEMUELEC
 
 // safe implements                                                                                                                                                                            
-#define implements( C, I ) (    __extension__ ({
-		static bool impl=(dynamic_cast<I*>(&C))? true : false;
-		impl;
+#define implements( C, I ) (    __extension__ ({ \
+		static bool impl=(dynamic_cast<I*>(&C))? true : false; \
+		impl; \
 }))
 
 void GuiGameOptions::hideGame(FileData* file)

@@ -544,12 +544,12 @@ void GuiGameOptions::hideGame(FileData* file)
 	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
 
 	auto view = ViewController::get()->getGameListView(sys, false);
-	ISimpleGameListView* sview = dynamic_cast<ISimpleGameListView*>(*(view.get()));
+	auto sview = dynamic_cast<std::shared_ptr<ISimpleGameListView>>(view);
 	if (view != nullptr) {
 		if (sview != nullptr) {
-			int index = sview->getCursorIndex();
+			int index = sview.get()->getCursorIndex();
 			if (index > 0)
-				sview->setCursorIndex(--index);
+				sview.get()->setCursorIndex(--index);
 	  }
 		view.get()->remove(sourceFile);
 	}

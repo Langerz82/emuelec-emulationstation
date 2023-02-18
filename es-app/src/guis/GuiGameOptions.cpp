@@ -531,17 +531,18 @@ void GuiGameOptions::hideGame(FileData* file)
 	if (file->getType() != GAME)
 		return;
 
-	file->setMetadata(MetaDataId::Hidden, "true");
-	file->getMetadata().resetChangedFlag();
-
 	auto sourceFile = file->getSourceFileData();
+	sourceFile->setMetadata(MetaDataId::Hidden, "true");
+	sourceFile->getMetadata().resetChangedFlag();
+		
 	ViewController::get()->onFileChanged(sourceFile, FILE_METADATA_CHANGED);
 
 	auto sys = sourceFile->getSystem();
 	if (sys->isGroupChildSystem())
 		sys = sys->getParentGroupSystem();
 
-	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
+	CollectionSystemManager::get()->refreshCollectionSystems(sourceFile);
+	saveToGamelistRecovery(sourceFile);
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr)

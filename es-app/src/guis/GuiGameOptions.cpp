@@ -526,12 +526,6 @@ void GuiGameOptions::deleteGame(FileData* file)
 
 #ifdef _ENABLEEMUELEC
 
-// safe implements                                                                                                                                                                            
-#define implements( C, I ) (    __extension__ ({ \
-		static bool impl=(dynamic_cast<I*>(&C))? true : false; \
-		impl; \
-}))
-
 void GuiGameOptions::hideGame(FileData* file)
 {
 	if (file->getType() != GAME)
@@ -551,17 +545,12 @@ void GuiGameOptions::hideGame(FileData* file)
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr) {
-		if (implements(view.get(), ISimpleGameListView )) {
-			int index = sview.get()->getCursorIndex();
-			if (index > 0)
-				sview.get()->setCursorIndex(--index);
-	  }
 		view.get()->remove(sourceFile);
 	}
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-		delete sourceFile;
+		//delete sourceFile;
 	}
 }
 

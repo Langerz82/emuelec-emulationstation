@@ -538,7 +538,7 @@ void GuiGameOptions::hideGame(FileData* file)
 	//file->getMetadata().setDirty();	
 	//ViewController::get()->onFileChanged(file, FILE_METADATA_CHANGED);
 
-	sourceFile->getMetadata().setDirty();
+	file->getMetadata().setDirty();
 	ViewController::get()->onFileChanged(file, FILE_METADATA_CHANGED);
 	//ViewController::get()->onFileChanged(sourceFile, FILE_METADATA_CHANGED);
 

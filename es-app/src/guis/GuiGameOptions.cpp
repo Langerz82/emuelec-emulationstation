@@ -544,7 +544,6 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-		delete sourceFile;
 	}
 	
   std::string strMkDir = sourceFile->getParent()->getPath() + std::string("/junk");
@@ -564,6 +563,8 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
   std::string strMvFile = cmdMvFile;
 
 	system(strMvFile.c_str());
+	
+	delete sourceFile;
 }
 
 #endif

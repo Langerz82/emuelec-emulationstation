@@ -546,8 +546,8 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
   snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" ./junk", sourceFile->getFullPath());
   std::string strMvFile = cmdMvFile;
 		
-	system(strMkDir);
-	system(strMvFile);
+	system(strMkDir.c_str());
+	system(strMvFile.c_str());
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr)

@@ -29,6 +29,9 @@ public:
 
 private:
 	static void deleteGame(FileData* file);
+#ifdef _ENABLEEMUELEC
+		static void moveToJunkGame(FileData* file);
+#endif
 
 #ifdef _ENABLEEMUELEC
 	static void createMultidisc(FileData* file);

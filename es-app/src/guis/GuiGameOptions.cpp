@@ -251,6 +251,13 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 
 
 			});
+			
+#ifdef _ENABLEEMUELEC				
+			mMenu.addEntry(isImageViewer ? _("MOVE TO JUNK") : _("MOVE TO JUNK"), false, [this, game]
+			{
+				moveToJunkGame(game);
+			});
+#endif			
 		}
 
 #ifdef _ENABLEEMUELEC
@@ -514,6 +521,45 @@ void GuiGameOptions::deleteGame(FileData* file)
 		delete sourceFile;
 	}
 }
+
+#ifdef _ENABLEEMUELEC
+
+void GuiGameOptions::moveToJunkGame(FileData* file)
+{
+	if (file->getType() != GAME)
+		return;
+
+	auto sourceFile = file->getSourceFileData();
+
+	auto sys = sourceFile->getSystem();
+	if (sys->isGroupChildSystem())
+		sys = sys->getParentGroupSystem();
+
+
+	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
+	
+	char cmdMkdir[255];
+  snprintf(cmdMkdir, sizeof(cmdMkdir), "mkdir -p %s/junk", sourceFile->getParent());
+  std::string strMkDir = cmdMkdir;
+
+	char cmdMvFile[255];
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" ./junk", sourceFile->getFullPath());
+  std::string strMvFile = cmdMvFile;
+		
+	system(strMkDir);
+	system(strMvFile);
+
+	auto view = ViewController::get()->getGameListView(sys, false);
+	if (view != nullptr)
+		view.get()->remove(sourceFile);
+	else
+	{
+		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
+		delete sourceFile;
+	}
+}
+
+#endif
 
 #ifdef _ENABLEEMUELEC
 

@@ -547,6 +547,8 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	}
 	
   std::string strMkDir = sourceFile->getParent()->getPath() + std::string("/junk");
+	
+	LOG(LogInfo) << "strMkDir:" << strMkDir.c_str();
 	if (!Utils::FileSystem::exists(strMkDir.c_str())) {
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
 		FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
@@ -562,6 +564,7 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
   snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" ./junk", sourceFile->getFullPath());
   std::string strMvFile = cmdMvFile;
 
+	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 	
 	delete sourceFile;

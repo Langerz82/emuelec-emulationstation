@@ -555,7 +555,7 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 				view.get()->repopulate();
 				view->setCursor(newFolder);
 		}
-		//ViewController::get()->reloadGameListView(sys);
+		ViewController::get()->reloadGameListView(sys);
 	}
 
 	char cmdMvFile[1024];
@@ -570,8 +570,6 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
 	}
-	
-	//delete sourceFile;
 }
 
 #endif

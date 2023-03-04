@@ -558,10 +558,9 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 		//ViewController::get()->reloadGameListView(sys);
 	}
 
-	char cmdMvFile[255];
-  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" ./junk/", sourceFile->getFullPath().c_str());
+	char cmdMvFile[1024];
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), strMkDir.c_str());
   std::string strMvFile = cmdMvFile;
-
 	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 

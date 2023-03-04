@@ -8,6 +8,8 @@
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
 #include "components/OptionListComponent.h"
+#include "guis/GuiMsgBox.h"
+#include "guis/GuiTextEditPopupKeyboard.h"
 
 template<class T>
 T base_name(T const & path, T const & delims = "/\\")
@@ -69,7 +71,9 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
     }
   });
   addSaveFunc(saveFunc);
-  emuelec_folderopt_def->setSelectedChangedCallback(saveFunc);
+  emuelec_folderopt_def->setSelectedChangedCallback([emuelec_folderopt_def] { 
+    saveFunc();
+  });
 
 	ComponentListRow row;
 	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER NAME"), theme->Text.font, theme->Text.color);
@@ -155,6 +159,7 @@ void GuiMoveToFolder::createFolder(const std::string& path)
   //auto sys = sourceFile->getSystem();
 	//if (sys->isGroupChildSystem())
 	//	sys = sys->getParentGroupSystem();
+  auto view = ViewController::get()->getGameListView(mGame->getSystem(), false);
 
   if (!Utils::FileSystem::exists(path.c_str())) {
 		Utils::FileSystem::createDirectory(path.c_str());

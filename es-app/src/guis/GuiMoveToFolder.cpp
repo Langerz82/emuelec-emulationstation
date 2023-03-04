@@ -144,9 +144,9 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 		view.get()->remove(sourceFile);
 		ViewController::get()->reloadGameListView(view.get());
     std::string dir = parent_dir<std::string>(path.c_str());
-    FileData* fd = getFolderData(dir);
+    FolderData* fd = getFolderData(dir);
     if (fd != nullptr)
-      fd->getFolder()->addChild(mGame);
+      fd->addChild(mGame);
 	}
 	else
 	{
@@ -154,7 +154,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	}
 }
 
-FileData* GuiMoveToFolder::getFolderData(const std::string& name)
+FolderData* GuiMoveToFolder::getFolderData(const std::string& name)
 {
   SystemData* system = mGame->getSystem();
 
@@ -166,7 +166,7 @@ FileData* GuiMoveToFolder::getFolderData(const std::string& name)
     std::vector<FileData*> gameListFiles = view->getFileDataEntries();
     for (auto it = gameListFiles.begin(); it != gameListFiles.end(); it++) {
       if ((*it)->getType() == FOLDER && (*it)->getName() == name)
-        return *it;
+        return dynamic_cast<FolderData*>(*it);
     }
   }
   return nullptr;

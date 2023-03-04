@@ -11,7 +11,7 @@ public:
 	GuiMoveToFolder(Window* window, FileData* game);
 
   void moveToFolderGame(FileData* file, const std::string& path);
-  FileData* getFolderData(const std::string& name);
+  FolderData* getFolderData(const std::string& name);
   void createFolder(const std::string& path);
 
 protected:

@@ -559,9 +559,10 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 
-	if (view != nullptr)
+	if (view != nullptr) {
 		view.get()->remove(sourceFile);
 		ViewController::get()->reloadGameListView(view.get());
+	}
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);

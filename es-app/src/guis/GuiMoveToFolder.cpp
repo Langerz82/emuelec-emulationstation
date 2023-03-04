@@ -10,6 +10,7 @@
 #include "components/OptionListComponent.h"
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopupKeyboard.h"
+#include "guis/GuiTextEditPopup.h"
 
 template<class T>
 T base_name(T const & path, T const & delims = "/\\")
@@ -71,7 +72,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
     }
   });
   addSaveFunc(saveFunc);
-  emuelec_folderopt_def->setSelectedChangedCallback([emuelec_folderopt_def] { 
+  emuelec_folderopt_def->setSelectedChangedCallback([emuelec_folderopt_def, saveFunc] (std::string val) { 
     saveFunc();
   });
 

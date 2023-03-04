@@ -27,8 +27,8 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(w
   {
     std::vector<FileData*> gameListFiles = view->getFileDataEntries();
     for (auto it = gameListFiles.begin(); it != gameListFiles.end(); it++) {
-      if (it->getType() == FOLDER)
-        folderoptions.push_back(it);
+      if ((*it)->getType() == FOLDER)
+        folderoptions.push_back(*it);
     }
   }
 

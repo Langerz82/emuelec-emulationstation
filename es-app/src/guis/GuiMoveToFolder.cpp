@@ -72,8 +72,12 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
   auto folderoptionsS = SystemConf::getInstance()->get("folder_option");
   //if (folderoptionsS.empty() && !folderoptions.size() > 0)
     //folderoptionsS = folderoptions[0]->getFullPath();
-  std::string basePath = mGame->getParent()->getPath();
-  emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
+  
+  if (mGame->getParent()->getParent() != nullptr) {
+    std::string basePath = mGame->getParent()-getParent()->getPath();
+    emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
+  }
+
   for (auto it = folderoptions.begin(); it != folderoptions.end(); it++) {
     FileData* fd = *it;
     emuelec_folderopt_def->add(fd->getPath(), fd->getPath(), folderoptionsS == fd->getPath());
@@ -184,10 +188,12 @@ void GuiMoveToFolder::createFolder(const std::string& path)
 
   if (!Utils::FileSystem::exists(path.c_str())) {
 		Utils::FileSystem::createDirectory(path.c_str());
-		/*FileData* newFolder = new FileData(FOLDER, folderName, sourceFile->getSystem());
-		mGame->getParent()->addChild(newFolder);
-		if (view != nullptr) {
-				view.get()->repopulate();
-		}*/
+		FileData* newFolder = new FileData(FOLDER, folderName, sys);
+    //sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
+    sourceFile->getParent()->addChild(newFolder);
+  	if (view != nullptr) {
+  			view.get()->repopulate();
+  			view->setCursor(newFolder);
+  	}
 	}
 }

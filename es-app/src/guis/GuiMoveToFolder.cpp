@@ -16,20 +16,23 @@ template<class T>
 T parent_dir(T const & path, T const & delims = "/\\")
 {
   int count = path.find_last_of(delims);
-  char* subpath = path.substr(0,count);
+  std::string subpath = path.substr(0,count);
   count = path.find_last_of(delims);
   return subpath.substr(count);
 }
+
 template<class T>
 T base_path(T const & path, T const & delims = "/\\")
 {
   return path.substr(0,path.find_last_of(delims));
 }
+
 template<class T>
 T base_name(T const & path, T const & delims = "/\\")
 {
   return path.substr(path.find_last_of(delims) + 1);
 }
+
 template<class T>
 T remove_extension(T const & filename)
 {
@@ -140,7 +143,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);
 		ViewController::get()->reloadGameListView(view.get());
-    std::string dir = parent_dir<std::string>(path.c_str())
+    std::string dir = parent_dir<std::string>(path.c_str());
     FileData* fd = getFolderData(dir);
     if (fd != nullptr)
       fd->addChild(game);

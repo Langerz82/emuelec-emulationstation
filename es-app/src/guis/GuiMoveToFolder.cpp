@@ -38,7 +38,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(w
   if (folderoptionsS.empty() && !folderoptions.size() > 0)
     folderoptionsS = folderoptions[0]->getFullPath();
 
-  for (auto it = folderoptions.cbegin(); it != folderoptions.cend(); it++) {
+  for (auto it = folderoptions.begin(); it != folderoptions.end(); it++) {
     emuelec_folderopt_def->add(it->getPath(), it->getFullPath(), folderoptionsS == it->getFullPath());
   }
   

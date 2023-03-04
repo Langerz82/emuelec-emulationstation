@@ -1,9 +1,13 @@
 #include "GuiMoveToFolder.h"
+#include "CollectionSystemManager.h"
 #include "SystemConf.h"
 #include "SystemData.h"
+#include "platform.h"
 
 #include "views/gamelist/IGameListView.h"
+#include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
+#include "components/OptionListComponent.h"
 
 GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(window, _("MOVE TO FOLDER").c_str())
 {
@@ -15,12 +19,17 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(w
 	});
 
   SystemData* system = game->getSystem();
+
   std::shared_ptr<IGameListView> gameList = ViewController::get()->getGameListView(system);
-  std::vector<FileData*> gameListFiles = gameList->getFileDataEntries();
   std::vector<FileData*> folderoptions;
-  for (auto it = gameListFiles.cbegin(); it != gameListFiles.cend(); it++) {
-    if (it->getType() == FOLDER)
-      folderoptions.push_back(*it);
+  ISimpleGameListView* view = dynamic_cast<ISimpleGameListView*>(gameList.get());
+  if (view != nullptr)
+  {
+    std::vector<FileData*> gameListFiles = view->getFileDataEntries();
+    for (auto it = gameListFiles.cbegin(); it != gameListFiles.cend(); it++) {
+      if (it->getType() == FOLDER)
+        folderoptions.push_back(*it);
+    }
   }
 
   auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);

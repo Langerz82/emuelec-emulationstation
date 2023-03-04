@@ -553,9 +553,9 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 		sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
 		if (view != nullptr) {
 				view.get()->repopulate();
-				view->setCursor(newFolder);
+				view.get()->setCursor(newFolder);
 		}
-		ViewController::get()->reloadGameListView(sys);
+		//ViewController::get()->reloadGameListView(sys);
 	}
 
 	char cmdMvFile[1024];

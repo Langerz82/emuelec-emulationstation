@@ -549,8 +549,8 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 
 	if (!Utils::FileSystem::exists(strMkDir.c_str())) {
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
-		FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
-		parent->addChild(newFolder);
+		//FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
+		//parent->addChild(newFolder);
 	}
 
 	char cmdMvFile[1024];

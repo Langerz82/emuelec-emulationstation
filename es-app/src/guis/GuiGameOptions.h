@@ -30,7 +30,7 @@ public:
 private:
 	static void deleteGame(FileData* file);
 #ifdef _ENABLEEMUELEC
-		static void moveToJunkGame(FileData* file);
+		static void moveToFolderGame(FileData* file, const std::string& path);
 #endif
 
 #ifdef _ENABLEEMUELEC

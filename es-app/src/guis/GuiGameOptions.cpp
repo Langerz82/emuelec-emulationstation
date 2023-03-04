@@ -253,9 +253,37 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			});
 			
 #ifdef _ENABLEEMUELEC				
-			mMenu.addEntry(isImageViewer ? _("MOVE TO JUNK") : _("MOVE TO JUNK"), false, [this, game]
+			mMenu.addEntry(isImageViewer ? _("MOVE TO FOLDER") : _("MOVE TO FOLDER"), false, [this, game]
 			{
-				moveToJunkGame(game);
+				SystemData* system = game->getSystem();
+				std::shared_ptr<IGameListView> gameList = ViewController::get()->getGameListView(system);
+				std::vector<FileData*> gameListFiles = gameList->getFileDataEntries();
+				std::vector<FileData*> folderoptions;
+				for (auto it = gameListFiles.cbegin(); it != gameListFiles.cend(); it++) {
+					if (it->getType() == FOLDER)
+						folderoptions.push_back(*it);
+				}
+
+				auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
+
+				auto folderoptionsS = SystemConf::getInstance()->get("folder_option");
+				if (folderoptionsS.empty() && !folderoptions.size() > 0)
+					folderoptionsS = folderoptions[0];
+
+				for (auto it = folderoptions.cbegin(); it != folderoptions.cend(); it++) {
+					emuelec_folderopt_def->add(it->getPath(), it->getFullPath(), folderoptionsS == it->getFullPath());
+				}
+
+				s->addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
+				s->addSaveFunc([emuelec_folderopt_def] {
+					if (emuelec_folderopt_def->changed()) {
+						std::string selectedfolder = emuelec_folderopt_def->getSelected();
+						SystemConf::getInstance()->set("folder_option", selectedfolder);
+		        SystemConf::getInstance()->saveSystemConf();
+					}
+					moveToFolderGame(game, selectedfolder);
+				});
+
 			});
 #endif			
 		}
@@ -524,7 +552,7 @@ void GuiGameOptions::deleteGame(FileData* file)
 
 #ifdef _ENABLEEMUELEC
 
-void GuiGameOptions::moveToJunkGame(FileData* file)
+void GuiGameOptions::moveToFolderGame(FileData* file, const std::string& path)
 {
 	if (file->getType() != GAME)
 		return;
@@ -535,12 +563,11 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	if (sys->isGroupChildSystem())
 		sys = sys->getParentGroupSystem();
 
-
 	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 
-	std::string strMkDir;
+	/*std::string strMkDir;
 	FileData* parent = file->getParent();
   if (parent != nullptr) {
 		strMkDir = parent->getFullPath() + std::string("/junk");
@@ -549,15 +576,23 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 
 	if (!Utils::FileSystem::exists(strMkDir.c_str())) {
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
-		//FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
-		//parent->addChild(newFolder);
-	}
+		junkFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
+		if (view != nullptr) {
+			view.get()->getCurrentFolder()->addChild(newFolder);
+		}
+	}*/
 
 	char cmdMvFile[1024];
-  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), strMkDir.c_str());
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
 	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
+
+	/*FileData* newFile = new FileData(GAME, file->getName(), sourceFile->getSystem());
+	if (view != nullptr) {
+		newFolder->addChild(newFile);
+		view.get()->getCurrentFolder()->addChild(newFolder);
+	}*/
 
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);

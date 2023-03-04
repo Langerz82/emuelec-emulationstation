@@ -146,7 +146,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
     std::string dir = parent_dir<std::string>(path.c_str());
     FileData* fd = getFolderData(dir);
     if (fd != nullptr)
-      fd->addChild(game);
+      fd->getFolder()->addChild(mGame);
 	}
 	else
 	{

@@ -190,7 +190,7 @@ void GuiMoveToFolder::createFolder(const std::string& path)
 		Utils::FileSystem::createDirectory(path.c_str());
 		FileData* newFolder = new FileData(FOLDER, folderName, sys);
     //sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
-    sourceFile->getParent()->getFolder()->addChild(newFolder);
+    mGame->getParent()->addChild(newFolder);
   	if (view != nullptr) {
   			view.get()->repopulate();
   			//view->setCursor(newFolder);

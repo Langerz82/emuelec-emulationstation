@@ -545,16 +545,16 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
 	}*/
-	
+	std::string strMkDir;
 	FileData* parent = file->getParent();
   if (parent != nullptr) {
-		std::string strMkDir = parent->getFullPath() + std::string("/junk");
+		strMkDir = parent->getFullPath() + std::string("/junk");
 		LOG(LogInfo) << "strMkDir:" << strMkDir.c_str();
 	}
 
 	if (!Utils::FileSystem::exists(strMkDir.c_str())) {
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
-		FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
+		//FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
 		/*sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
 		if (view != nullptr) {
 				view.get()->repopulate();

@@ -536,7 +536,7 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 		sys = sys->getParentGroupSystem();
 
 
-	CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
+	/*CollectionSystemManager::get()->deleteCollectionFiles(sourceFile);
 
 	auto view = ViewController::get()->getGameListView(sys, false);
 	if (view != nullptr)
@@ -544,19 +544,19 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-	}
+	}*/
 	
   std::string strMkDir = sourceFile->getParent()->getFullPath() + std::string("/junk");
 	
 	LOG(LogInfo) << "strMkDir:" << strMkDir.c_str();
 	if (!Utils::FileSystem::exists(strMkDir.c_str())) {
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
-		FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
+		/*FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
 		sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
 		if (view != nullptr) {
 				view.get()->repopulate();
 				view->setCursor(newFolder);
-		}
+		}*/
 		//ViewController::get()->reloadGameListView(sys);
 	}
 
@@ -565,7 +565,7 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
   std::string strMvFile = cmdMvFile;
 
 	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
-	system(strMvFile.c_str());
+	//system(strMvFile.c_str());
 	
 	delete sourceFile;
 }

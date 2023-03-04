@@ -551,9 +551,6 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 		Utils::FileSystem::createDirectory(strMkDir.c_str());
 		FileData* newFolder = new FileData(FOLDER, "junk", sourceFile->getSystem());
 		sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
-		if (view != nullptr) {
-				view.get()->reloadGameListView(view.get());
-		}		
 	}
 
 	char cmdMvFile[1024];
@@ -564,6 +561,7 @@ void GuiGameOptions::moveToJunkGame(FileData* file)
 
 	if (view != nullptr)
 		view.get()->remove(sourceFile);
+		ViewController::get()->reloadGameListView(view.get());
 	else
 	{
 		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);

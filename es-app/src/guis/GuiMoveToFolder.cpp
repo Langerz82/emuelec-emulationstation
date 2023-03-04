@@ -151,6 +151,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
     FolderData* fd = getFolderData(dir);
     if (fd != nullptr)
       fd->addChild(mGame);
+    view.get()->repopulate();
 	}
 	else
 	{
@@ -188,12 +189,12 @@ void GuiMoveToFolder::createFolder(const std::string& path)
 
   if (!Utils::FileSystem::exists(path.c_str())) {
 		Utils::FileSystem::createDirectory(path.c_str());
-		FileData* newFolder = new FileData(FOLDER, folderName, sys);
+		//FileData* newFolder = new FileData(FOLDER, folderName, sys);
     //sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
-    mGame->getParent()->addChild(newFolder);
-  	if (view != nullptr) {
-  			view.get()->repopulate();
+    mGame->getParent()->addChild(new FileData(FOLDER, folderName, sys));
+  	//if (view != nullptr) {
+  			//view.get()->repopulate();
   			//view->setCursor(newFolder);
-  	}
+  	//}
 	}
 }

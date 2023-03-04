@@ -27,8 +27,8 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(w
   {
     std::vector<FileData*> gameListFiles = view->getFileDataEntries();
     for (auto it = gameListFiles.cbegin(); it != gameListFiles.cend(); it++) {
-      if (it->getType() == FOLDER)
-        folderoptions.push_back(*it);
+      if (fd->getType() == FOLDER)
+        folderoptions.push_back(it);
     }
   }
 
@@ -36,7 +36,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : GuiSettings(w
 
   auto folderoptionsS = SystemConf::getInstance()->get("folder_option");
   if (folderoptionsS.empty() && !folderoptions.size() > 0)
-    folderoptionsS = folderoptions[0];
+    folderoptionsS = folderoptions[0]->getFullPath();
 
   for (auto it = folderoptions.cbegin(); it != folderoptions.cend(); it++) {
     emuelec_folderopt_def->add(it->getPath(), it->getFullPath(), folderoptionsS == it->getFullPath());

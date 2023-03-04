@@ -74,7 +74,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
     //folderoptionsS = folderoptions[0]->getFullPath();
   
   if (mGame->getParent()->getParent() != nullptr) {
-    std::string basePath = mGame->getParent()-getParent()->getPath();
+    std::string basePath = mGame->getParent()->getParent()->getPath();
     emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
   }
 

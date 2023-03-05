@@ -116,7 +116,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
       return;
     }
 
-    createFolder(path);
+    createFolder(game, path);
 	};
 
   row.makeAcceptInputHandler([this, window, game, updateFN]

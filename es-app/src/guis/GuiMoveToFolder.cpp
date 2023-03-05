@@ -110,13 +110,13 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
 	{
 		if (newVal.empty()) return;
 
-    std::string path = game->getPath() + "/" + newVal;
+    std::string path = base_path<std::string>(game->getPath()) + "/" + newVal;
 		if (Utils::FileSystem::exists(path.c_str())) {
       window->pushGui(new GuiMsgBox(window, _("FOLDER EXISTS"), _("OK"), nullptr));
       return;
     }
-    window->pushGui(new GuiMsgBox(window, base_path<std::string>(path), _("OK"), nullptr));
-    createFolder(game, base_path<std::string>(path));
+    window->pushGui(new GuiMsgBox(window, path, _("OK"), nullptr));
+    createFolder(game, path);
 	};
 
   row.makeAcceptInputHandler([this, window, game, updateFN]
@@ -161,8 +161,9 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
   fd->addChild(newFile);
 
 	if (view != nullptr) {
+    auto system = file->getSystem();
 		view.get()->remove(sourceFile);
-    ViewController::get()->reloadGameListView(file->getSystem());
+    ViewController::get()->reloadGameListView(system);
 	}
 	else
 	{
@@ -207,6 +208,6 @@ void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
     if (showFoldersMode == "always")
       mGame->getParent()->addChild(new FolderData(path.c_str(), sys, false));
-      ViewController::get()->reloadGameListView(file->getSystem());
+      ViewController::get()->reloadGameListView(sys);
 	}
 }

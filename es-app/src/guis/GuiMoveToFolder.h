@@ -19,5 +19,6 @@ public:
 
 protected:
   FileData* mGame;
+  Window* mWindow;
 
 };

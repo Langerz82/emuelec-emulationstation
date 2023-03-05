@@ -7,19 +7,10 @@
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
-#include "components/OptionListComponent.h"
+
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"
-
-template<class T>
-T parent_dir(T const & path, T const & delims = "/\\")
-{
-  int count = path.find_last_of(delims);
-  std::string subpath = path.substr(0,count);
-  count = path.find_last_of(delims);
-  return subpath.substr(count);
-}
 
 template<class T>
 T base_path(T const & path, T const & delims = "/\\")
@@ -40,79 +31,62 @@ T remove_extension(T const & filename)
   return p > 0 && p != T::npos ? filename.substr(0, p) : filename;
 }
 
-GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : 
-  mGame(game), 
-  GuiSettings(window, _("MOVE TO FOLDER").c_str())
+GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) : 
+  mWindow(window),
+  mFile(file),
+  GuiSettings(window, _("FILE ")+file->getName().c_str())
 {
   auto theme = ThemeData::getMenuTheme();
 
-  addEntry(_("MOVE GAME TO FOLDER"), true, [this, game]
-	{
-    std::string folderOption = SystemConf::getInstance()->get("folder_option");
-    if (!folderOption.empty())
-      moveToFolderGame(game, folderOption);
-	});
-
-  SystemData* system = game->getSystem();
-
-  std::shared_ptr<IGameListView> gameList = ViewController::get()->getGameListView(system);
-  std::vector<FileData*> folderoptions;
-  ISimpleGameListView* view = dynamic_cast<ISimpleGameListView*>(gameList.get());
-  if (view != nullptr)
-  {
-    std::vector<FileData*> gameListFiles = view->getFileDataEntries();
-    for (auto it = gameListFiles.begin(); it != gameListFiles.end(); it++) {
-      if ((*it)->getType() == FOLDER)
-        folderoptions.push_back(*it);
-    }
-  }
-
   auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
 
-  auto folderoptionsS = SystemConf::getInstance()->get("folder_option");
-  //if (folderoptionsS.empty() && !folderoptions.size() > 0)
-    //folderoptionsS = folderoptions[0]->getFullPath();
-  
-  if (mGame->getParent()->getParent() != nullptr) {
-    std::string basePath = mGame->getParent()->getParent()->getPath();
-    emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
+  if (file->getType() == GAME) {
+    addEntry(_("MOVE GAME TO FOLDER"), true, [this, file, emuelec_folderopt_def]
+  	{
+      std::string folderOption = (emuelec_folderopt_def->getSelected().empty()) ?
+        SystemConf::getInstance()->get("folder_option") : emuelec_folderopt_def->getSelected();
+      if (!folderOption.empty())
+        moveToFolderGame(file, folderOption);
+      close();
+  	});
   }
 
-  for (auto it = folderoptions.begin(); it != folderoptions.end(); it++) {
-    FileData* fd = *it;
-    emuelec_folderopt_def->add(fd->getPath(), fd->getPath(), folderoptionsS == fd->getPath());
+  makeFolderList(file, emuelec_folderopt_def);
+
+  if (file->getType() == GAME) {
+    addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
+    const std::function<void()> saveFunc([emuelec_folderopt_def] {
+      if (emuelec_folderopt_def->changed()) {
+        std::string selectedfolder = emuelec_folderopt_def->getSelected();
+        SystemConf::getInstance()->set("folder_option", selectedfolder);
+        SystemConf::getInstance()->saveSystemConf();
+      }
+    });
+    addSaveFunc(saveFunc);
+    emuelec_folderopt_def->setSelectedChangedCallback(
+      [emuelec_folderopt_def, saveFunc] (std::string val) { 
+        saveFunc();
+    });
   }
-  
-  addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
-  const std::function<void()> saveFunc([emuelec_folderopt_def] {
-    if (emuelec_folderopt_def->changed()) {
-      std::string selectedfolder = emuelec_folderopt_def->getSelected();
-      SystemConf::getInstance()->set("folder_option", selectedfolder);
-      SystemConf::getInstance()->saveSystemConf();
-    }
-  });
-  addSaveFunc(saveFunc);
-  emuelec_folderopt_def->setSelectedChangedCallback([emuelec_folderopt_def, saveFunc] (std::string val) { 
-    saveFunc();
-  });
 
 	ComponentListRow row;
-	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER NAME"), theme->Text.font, theme->Text.color);
+	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"),
+    theme->Text.font, theme->Text.color);
 	row.addElement(createName, true);
-  auto updateFN = [this, window, game](const std::string& newVal)
+  auto updateFN = [this, window, file, emuelec_folderopt_def](const std::string& newVal)
 	{
 		if (newVal.empty()) return;
 
-    std::string path = game->getPath() + "/" + newVal;
+    std::string path = base_path<std::string>(file->getPath()) + "/" + newVal;
 		if (Utils::FileSystem::exists(path.c_str())) {
       window->pushGui(new GuiMsgBox(window, _("FOLDER EXISTS"), _("OK"), nullptr));
       return;
     }
-
-    createFolder(path);
+    createFolder(file, path);
+    makeFolderList(file, emuelec_folderopt_def);
 	};
 
-  row.makeAcceptInputHandler([this, window, game, updateFN]
+  row.makeAcceptInputHandler([this, window, file, updateFN]
 	{
 		if (Settings::getInstance()->getBool("UseOSK"))
 			window->pushGui(new GuiTextEditPopupKeyboard(window, _("FOLDER NAME"), "", updateFN, false));
@@ -122,6 +96,38 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
 
   addRow(row);
 }
+
+void GuiMoveToFolder::makeFolderList(FileData* file, std::shared_ptr< OptionListComponent<std::string>> optionList)
+{
+  std::vector<FolderData*> fds = getChildFolders(file->getParent());
+
+  std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
+  std::string basePath = file->getSystem()->getRootFolder()->getPath();
+  size_t len = base_path(basePath).length()+1;
+  std::string subpath = basePath;
+  subpath.replace(0, len, "");
+
+  optionList->clear();
+
+  if (file->getParent()->getParent() != nullptr) {      
+    if (fds.size() == 0) 
+      folderoptionsS = basePath;      
+
+    optionList->add(subpath, basePath, folderoptionsS == basePath);
+  }
+
+  for (auto it = fds.begin(); it != fds.end(); it++) {
+    FolderData* fd = *it;
+
+    subpath = fd->getPath();
+    subpath.replace(0, len, "");
+
+    optionList->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
+  }
+
+  if (optionList->getSelectedIndex() == -1)
+    optionList->selectFirstItem();  
+};
 
 void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 {
@@ -139,48 +145,57 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	auto view = ViewController::get()->getGameListView(sys, false);
 
 	char cmdMvFile[1024];
-  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), path.c_str());
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\" 2>&1 | tee /emuelec/logs/mtf.log", 
+    sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
-	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 
-	if (view != nullptr) {
-		view.get()->remove(sourceFile);
-    std::string dir = parent_dir<std::string>(path.c_str());
-    FolderData* fd = getFolderData(dir);
-    if (fd != nullptr)
-      fd->addChild(mGame);
-    view.get()->repopulate();
-    ViewController::get()->reloadGameListView(view.get());
-	}
-	else
-	{
-		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-	}
+  FolderData* fd = file->getSystem()->getRootFolder();
+  if (path != fd->getPath()) {
+    fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
+  }
+
+  if (fd != nullptr) {
+    std::string newPath = path+"/"+base_name<std::string>(file->getPath());
+    FileData* newFile = new FileData(GAME, newPath, file->getSystem());
+
+    fd->addChild(newFile);
+
+  	if (view != nullptr) {
+  		view.get()->remove(sourceFile);
+  	}
+  	else {
+  		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
+  	}
+  }
 }
 
-FolderData* GuiMoveToFolder::getFolderData(const std::string& name)
+std::vector<FolderData*> GuiMoveToFolder::getChildFolders(FolderData* folder)
 {
-  SystemData* system = mGame->getSystem();
+  std::vector<FolderData*> fds;
+  std::vector<FileData*> children = folder->getChildren();
+  for (auto it = children.begin(); it != children.end(); it++) {
+    if ((*it)->getType() == FOLDER)
+      fds.push_back(dynamic_cast<FolderData*>(*it));
+  }
+  return fds;
+}
 
-  std::shared_ptr<IGameListView> gameList = ViewController::get()->getGameListView(system);
-  std::vector<FileData*> folderoptions;
-  ISimpleGameListView* view = dynamic_cast<ISimpleGameListView*>(gameList.get());
-  if (view != nullptr)
-  {
-    std::vector<FileData*> gameListFiles = view->getFileDataEntries();
-    for (auto it = gameListFiles.begin(); it != gameListFiles.end(); it++) {
-      if ((*it)->getType() == FOLDER && (*it)->getName() == name)
-        return dynamic_cast<FolderData*>(*it);
-    }
+FolderData* GuiMoveToFolder::getFolderData(FolderData* folder, const std::string& name)
+{
+  std::vector<FileData*> children = folder->getChildren();
+  std::string name2;
+  for (auto it = children.begin(); it != children.end(); it++) {
+    name2 = base_name<std::string>((*it)->getPath());
+    if ((*it)->getType() == FOLDER && name2 == name)
+      return dynamic_cast<FolderData*>(*it);
   }
   return nullptr;
 }
 
-void GuiMoveToFolder::createFolder(const std::string& path)
+void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
 {
-  auto sourceFile = mGame->getSourceFileData();
-  std::string folderName = remove_extension(base_name(path));
+  auto sourceFile = file->getSourceFileData();
 
   auto sys = sourceFile->getSystem();
 	if (sys->isGroupChildSystem())
@@ -189,14 +204,11 @@ void GuiMoveToFolder::createFolder(const std::string& path)
 
   if (!Utils::FileSystem::exists(path.c_str())) {
 		Utils::FileSystem::createDirectory(path.c_str());
-		//FileData* newFolder = new FileData(FOLDER, folderName, sys);
-    //sourceFile->getSystem()->getRootFolder()->addChild(newFolder);
+
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
-    if (showFoldersMode == "always")
-      mGame->getParent()->addChild(new FileData(FOLDER, folderName, sys));
-  	//if (view != nullptr) {
-  			//view.get()->repopulate();
-  			//view->setCursor(newFolder);
-  	//}
+    if (showFoldersMode == "always") {
+      file->getParent()->addChild(new FolderData(path.c_str(), sys, false));
+      ViewController::get()->reloadGameListView(sys);
+    }
 	}
 }

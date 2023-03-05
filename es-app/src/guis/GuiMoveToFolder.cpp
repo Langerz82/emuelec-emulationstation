@@ -40,7 +40,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
   auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
 
-  if (file.getType() == GAME) {
+  if (file->getType() == GAME) {
     addEntry(_("MOVE GAME TO FOLDER"), true, [this, file, emuelec_folderopt_def]
   	{
       std::string folderOption = (emuelec_folderopt_def->getSelected().empty()) ?
@@ -56,7 +56,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
 
-  if (file.getType() == GAME) {
+  if (file->getType() == GAME) {
     if (file->getParent()->getParent() != nullptr) {
       
       if (fds.size() == 0) 
@@ -196,7 +196,7 @@ void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
 
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
     if (showFoldersMode == "always")
-      mGame->getParent()->addChild(new FolderData(path.c_str(), sys, false));
+      file->getParent()->addChild(new FolderData(path.c_str(), sys, false));
       //ViewController::get()->reloadGameListView(sys);
 	}
 }

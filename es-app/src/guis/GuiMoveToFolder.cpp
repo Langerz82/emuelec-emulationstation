@@ -131,13 +131,14 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	char cmdMvFile[1024];
   snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
+  mWindow->pushGui(new GuiMsgBox(mWindow, strMvFile, _("OK"), nullptr));
 	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 
-  FolderData* fd = file->getParent();
+  FolderData* fd = file->getSystem()->getRootFolder();
   std::string destDir = path.c_str();
   //mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
-  if (destDir != file->getSystem()->getRootFolder()->getPath()) {
+  if (destDir != fd->getPath()) {
     //mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
     fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
   }

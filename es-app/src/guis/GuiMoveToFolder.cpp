@@ -43,22 +43,24 @@ T remove_extension(T const & filename)
 GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) : 
   mWindow(window),
   mGame(game),
-  GuiSettings(window, _("MOVE TO FOLDER").c_str())
+  GuiSettings(window, _("FILE MANAGEMENT").c_str())
 {
   auto theme = ThemeData::getMenuTheme();
 
-  addEntry(_("MOVE GAME TO FOLDER"), true, [this, game]
+  auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
+
+  addEntry(_("MOVE GAME TO FOLDER"), true, [this, game, emuelec_folderopt_def]
 	{
-    std::string folderOption = SystemConf::getInstance()->get("folder_option");
+    std::string folderOption = (emuelec_folderopt_def->getSelected().empty()) ?
+      SystemConf::getInstance()->get("folder_option") : emuelec_folderopt_def->getSelected();
     if (!folderOption.empty())
       moveToFolderGame(game, folderOption);
+    close();
 	});
 
   SystemData* system = game->getSystem();
 
   std::vector<FolderData*> fds = getChildFolders(game->getParent());
-  
-  auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
 
   auto folderoptionsS = SystemConf::getInstance()->get("folder_option");
   
@@ -73,7 +75,10 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
     FolderData* fd = *it;
     emuelec_folderopt_def->add(fd->getPath(), fd->getPath(), folderoptionsS == fd->getPath());
   }
-  
+
+  if (emuelec_folderopt_def->getSelected().empty())
+    emuelec_folderopt_def.selectFirstItem();
+
   addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
   const std::function<void()> saveFunc([emuelec_folderopt_def] {
     if (emuelec_folderopt_def->changed()) {
@@ -86,6 +91,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
   emuelec_folderopt_def->setSelectedChangedCallback([emuelec_folderopt_def, saveFunc] (std::string val) { 
     saveFunc();
   });
+
 
 	ComponentListRow row;
 	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"), theme->Text.font, theme->Text.color);
@@ -131,20 +137,15 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	char cmdMvFile[1024];
   snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
-  mWindow->pushGui(new GuiMsgBox(mWindow, strMvFile, _("OK"), nullptr));
-	LOG(LogInfo) << "strMvFile:" << strMvFile.c_str();
 	system(strMvFile.c_str());
 
   FolderData* fd = file->getSystem()->getRootFolder();
-  std::string destDir = path.c_str();
-  //mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
-  if (destDir != fd->getPath()) {
-    //mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
+  if (path != fd->getPath()) {
     fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
   }
+
   if (fd != nullptr) {
     std::string newPath = path+"/"+base_name<std::string>(file->getPath());
-    mWindow->pushGui(new GuiMsgBox(mWindow, "fd->getPath()="+fd->getPath()+", newPath="+newPath, _("OK"), nullptr));
     FileData* newFile = new FileData(GAME, newPath, file->getSystem());
 
     fd->addChild(newFile);

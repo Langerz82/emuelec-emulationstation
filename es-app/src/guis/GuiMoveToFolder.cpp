@@ -83,7 +83,9 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
   
   if (mGame->getParent()->getParent() != nullptr) {
     std::string basePath = mGame->getSystem()->getRootFolder()->getPath();
-    emuelec_folderopt_def->add(basePath, basePath, (fds.size() > 0) ? folderoptionsS == basePath : true);
+    if (fds.size() == 0) 
+      folderoptionsS = basePath;
+    emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
   }
 
   for (auto it = fds.begin(); it != fds.end(); it++) {
@@ -155,13 +157,13 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
   std::string destDir = path.c_str();
   mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
   if (destDir != file->getSystem()->getRootFolder()->getPath()) {
-    mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
+    //mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
     fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
   }
   if (fd != nullptr) {
-    mWindow->pushGui(new GuiMsgBox(mWindow, fd->getPath(), _("OK"), nullptr));
+    //mWindow->pushGui(new GuiMsgBox(mWindow, fd->getPath(), _("OK"), nullptr));
     std::string newPath = fd->getPath()+"/"+base_name<std::string>(file->getPath());
-    mWindow->pushGui(new GuiMsgBox(mWindow, newPath, _("OK"), nullptr));
+    //mWindow->pushGui(new GuiMsgBox(mWindow, newPath, _("OK"), nullptr));
     FileData* newFile = new FileData(GAME, newPath, file->getSystem());
 
     fd->addChild(newFile);

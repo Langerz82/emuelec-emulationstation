@@ -82,7 +82,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
   
   if (mGame->getParent()->getParent() != nullptr) {
     std::string basePath = mGame->getSystem()->getRootFolder()->getPath();
-    emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
+    emuelec_folderopt_def->add(basePath, basePath, (fds.size() > 0) folderoptionsS == basePath : true);
   }
 
   for (auto it = fds.begin(); it != fds.end(); it++) {
@@ -115,7 +115,6 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
       window->pushGui(new GuiMsgBox(window, _("FOLDER EXISTS"), _("OK"), nullptr));
       return;
     }
-    window->pushGui(new GuiMsgBox(window, path, _("OK"), nullptr));
     createFolder(game, path);
 	};
 
@@ -154,21 +153,25 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
   FolderData* fd = file->getParent();
   if (file->getParent() != file->getSystem()->getRootFolder())
     fd = getFolderData(file->getParent(), parent_dir<std::string>(path.c_str()));
-    
-  std::string newPath = path+"/"+base_name<std::string>(sourceFile->getFullPath());
-  FileData* newFile = new FileData(GAME, newPath, file->getSystem());
+  
+  if (fd != nullptr) {
+    window->pushGui(new GuiMsgBox(window, fd->getPath(), _("OK"), nullptr));
+    std::string newPath = path+"/"+base_name<std::string>(file->getPath());
+    window->pushGui(new GuiMsgBox(window, newPath, _("OK"), nullptr));
+    FileData* newFile = new FileData(GAME, newPath, file->getSystem());
 
-  fd->addChild(newFile);
+    fd->addChild(newFile);
 
-	if (view != nullptr) {
-    auto system = file->getSystem();
-		view.get()->remove(sourceFile);
-    ViewController::get()->reloadGameListView(system);
-	}
-	else
-	{
-		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
-	}
+  	if (view != nullptr) {
+      //auto system = file->getSystem();
+  		view.get()->remove(sourceFile);
+  	}
+  	else
+  	{
+  		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
+  	}
+    //ViewController::get()->reloadGameListView(sys);
+  }
 }
 
 std::vector<FolderData*> GuiMoveToFolder::getChildFolders(FolderData* folder)

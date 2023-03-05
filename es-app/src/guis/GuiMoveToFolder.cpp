@@ -12,25 +12,6 @@
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"
 
-/*
-template<class T>
-std::vector<T> explode_dir(T const & path, T const & delims = "/\\")
-{
-  std::vector<T> sections;
-  T section = path;
-  while(true)
-  {
-    int count = path.find_first_of(delims);
-    if (count == -1) {
-      sections.push_back(section);
-      return sections;
-    }  
-    sections.push_back(section.substr(0,count));
-    section = section.substr(count+1);
-  }
-}
-*/
-
 template<class T>
 T parent_dir(T const & path, T const & delims = "/\\")
 {
@@ -155,28 +136,24 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 
   FolderData* fd = file->getParent();
   std::string destDir = path.c_str();
-  mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
+  //mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
   if (destDir != file->getSystem()->getRootFolder()->getPath()) {
     //mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
     fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
   }
   if (fd != nullptr) {
-    //mWindow->pushGui(new GuiMsgBox(mWindow, fd->getPath(), _("OK"), nullptr));
-    std::string newPath = fd->getPath()+"/"+base_name<std::string>(file->getPath());
-    //mWindow->pushGui(new GuiMsgBox(mWindow, newPath, _("OK"), nullptr));
+    std::string newPath = path+"/"+base_name<std::string>(file->getPath());
+    mWindow->pushGui(new GuiMsgBox(mWindow, "fd->getPath()="+fd->getPath()+", newPath="+newPath, _("OK"), nullptr));
     FileData* newFile = new FileData(GAME, newPath, file->getSystem());
 
     fd->addChild(newFile);
 
   	if (view != nullptr) {
-      //auto system = file->getSystem();
   		view.get()->remove(sourceFile);
   	}
-  	else
-  	{
+  	else {
   		sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
   	}
-    //ViewController::get()->reloadGameListView(sys);
   }
 }
 
@@ -204,7 +181,6 @@ FolderData* GuiMoveToFolder::getFolderData(FolderData* folder, const std::string
 void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
 {
   auto sourceFile = file->getSourceFileData();
-  //std::string folderName = remove_extension(base_name(path));
 
   auto sys = sourceFile->getSystem();
 	if (sys->isGroupChildSystem())

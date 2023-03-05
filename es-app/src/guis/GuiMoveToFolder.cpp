@@ -43,7 +43,7 @@ T parent_dir(T const & path, T const & delims = "/\\")
 template<class T>
 T base_path(T const & path, T const & delims = "/\\")
 {
-  return path.substr(0,path.find_last_of(delims)-1);
+  return path.substr(0,path.find_last_of(delims));
 }
 
 template<class T>

@@ -116,7 +116,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
       return;
     }
 
-    createFolder(game, path);
+    createFolder(game, base_path<std::string>(path));
 	};
 
   row.makeAcceptInputHandler([this, window, game, updateFN]
@@ -158,13 +158,13 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
   std::string newPath = path+"/"+base_name<std::string>(sourceFile->getFullPath());
   file = new FileData(GAME, path, file->getSystem());
 
-  if (fd != nullptr)
-    fd->addChild(file);
+  //if (fd != nullptr)
+  fd->addChild(file);
 
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);    
-    view.get()->repopulate();
-    ViewController::get()->reloadGameListView(view.get());
+    //view.get()->repopulate();
+    //ViewController::get()->reloadGameListView(view.get());
 	}
 	else
 	{
@@ -196,7 +196,7 @@ FolderData* GuiMoveToFolder::getFolderData(FolderData* folder, const std::string
 void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
 {
   auto sourceFile = file->getSourceFileData();
-  std::string folderName = remove_extension(base_name(path));
+  //std::string folderName = remove_extension(base_name(path));
 
   auto sys = sourceFile->getSystem();
 	if (sys->isGroupChildSystem())

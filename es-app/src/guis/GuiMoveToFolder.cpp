@@ -104,7 +104,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
   });
 
 	ComponentListRow row;
-	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER NAME"), theme->Text.font, theme->Text.color);
+	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"), theme->Text.font, theme->Text.color);
 	row.addElement(createName, true);
   auto updateFN = [this, window, game](const std::string& newVal)
 	{
@@ -156,10 +156,9 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
     fd = getFolderData(file->getParent(), parent_dir<std::string>(path.c_str()));
     
   std::string newPath = path+"/"+base_name<std::string>(sourceFile->getFullPath());
-  file = new FileData(GAME, path, file->getSystem());
+  FileData* newFile = new FileData(GAME, newPath, file->getSystem());
 
-  //if (fd != nullptr)
-  fd->addChild(file);
+  fd->addChild(newFile);
 
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);

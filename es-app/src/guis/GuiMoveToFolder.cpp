@@ -153,9 +153,10 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 
   FolderData* fd = file->getParent();
   std::string destDir = path.c_str();
+  mWindow->pushGui(new GuiMsgBox(mWindow, destDir+" != "+file->getSystem()->getRootFolder()->getPath(), _("OK"), nullptr));
   if (destDir != file->getSystem()->getRootFolder()->getPath()) {
-    mWindow->pushGui(new GuiMsgBox(mWindow, parent_dir<std::string>(path.c_str()), _("OK"), nullptr));
-    fd = getFolderData(file->getParent(), parent_dir<std::string>(path.c_str()));
+    mWindow->pushGui(new GuiMsgBox(mWindow, base_name<std::string>(path.c_str()), _("OK"), nullptr));
+    fd = getFolderData(file->getParent(), base_name<std::string>(path.c_str()));
   }
   if (fd != nullptr) {
     mWindow->pushGui(new GuiMsgBox(mWindow, fd->getPath(), _("OK"), nullptr));

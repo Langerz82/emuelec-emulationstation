@@ -43,7 +43,7 @@ T parent_dir(T const & path, T const & delims = "/\\")
 template<class T>
 T base_path(T const & path, T const & delims = "/\\")
 {
-  return path.substr(0,path.find_last_of(delims));
+  return path.substr(0,path.find_last_of(delims)-1);
 }
 
 template<class T>
@@ -115,7 +115,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* game) :
       window->pushGui(new GuiMsgBox(window, _("FOLDER EXISTS"), _("OK"), nullptr));
       return;
     }
-
+    window->pushGui(new GuiMsgBox(window, base_path<std::string>(path), _("OK"), nullptr));
     createFolder(game, base_path<std::string>(path));
 	};
 
@@ -163,8 +163,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);
-    ViewController::get()->reloadGameListView(sys);
-    view->setCursor(file);
+    ViewController::get()->reloadGameListView(file->getSystem());
 	}
 	else
 	{
@@ -209,6 +208,6 @@ void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
     if (showFoldersMode == "always")
       mGame->getParent()->addChild(new FolderData(path.c_str(), sys, false));
-      ViewController::get()->reloadGameListView(sys);
+      ViewController::get()->reloadGameListView(file->getSystem());
 	}
 }

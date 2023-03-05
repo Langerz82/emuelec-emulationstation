@@ -164,7 +164,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);    
     //view.get()->repopulate();
-    //ViewController::get()->reloadGameListView(view.get());
+    ViewController::get()->reloadGameListView(view.get());
 	}
 	else
 	{
@@ -209,5 +209,6 @@ void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
     if (showFoldersMode == "always")
       mGame->getParent()->addChild(new FolderData(path.c_str(), sys, false));
+      ViewController::get()->reloadGameListView(view.get());
 	}
 }

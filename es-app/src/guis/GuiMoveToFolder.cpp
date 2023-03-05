@@ -13,15 +13,6 @@
 #include "guis/GuiTextEditPopup.h"
 
 template<class T>
-T parent_dir(T const & path, T const & delims = "/\\")
-{
-  int count = path.find_last_of(delims);
-  std::string subpath = path.substr(0,count);
-  count = subpath.find_last_of(delims);
-  return subpath.substr(count+1);
-}
-
-template<class T>
 T base_path(T const & path, T const & delims = "/\\")
 {
   return path.substr(0,path.find_last_of(delims));
@@ -59,8 +50,6 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       close();
   	});
   }
-
-  //SystemData* system = game->getSystem();
 
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 

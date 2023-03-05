@@ -10,7 +10,7 @@ class Window;
 class GuiMoveToFolder : public GuiSettings
 {
 public:
-	GuiMoveToFolder(Window* window, FileData* game);
+	GuiMoveToFolder(Window* window, FileData* file);
 
   void moveToFolderGame(FileData* file, const std::string& path);
   void createFolder(FileData* file, const std::string& path);
@@ -18,7 +18,7 @@ public:
   std::vector<FolderData*> getChildFolders(FolderData* folder);
 
 protected:
-  FileData* mGame;
+  FileData* mFile;
   Window* mWindow;
 
 };

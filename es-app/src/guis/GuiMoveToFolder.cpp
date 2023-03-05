@@ -164,7 +164,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	if (view != nullptr) {
 		view.get()->remove(sourceFile);
     ViewController::get()->reloadGameListView(sys);
-    view->setCursor(newFile);
+    view->setCursor(file);
 	}
 	else
 	{

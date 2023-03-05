@@ -37,7 +37,7 @@ T parent_dir(T const & path, T const & delims = "/\\")
   int count = path.find_last_of(delims);
   std::string subpath = path.substr(0,count);
   count = subpath.find_last_of(delims);
-  return subpath.substr(count);
+  return subpath.substr(count+1);
 }
 
 template<class T>
@@ -152,7 +152,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	system(strMvFile.c_str());
 
   FolderData* fd = file->getParent();
-  if (file->getParent() != file->getSystem()->getRootFolder()) {
+  if (fd != file->getSystem()->getRootFolder()) {
     mWindow->pushGui(new GuiMsgBox(mWindow, parent_dir<std::string>(path.c_str()), _("OK"), nullptr));
     fd = getFolderData(file->getParent(), parent_dir<std::string>(path.c_str()));
   }

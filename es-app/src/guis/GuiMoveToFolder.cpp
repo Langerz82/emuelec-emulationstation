@@ -31,7 +31,7 @@ T remove_extension(T const & filename)
   return p > 0 && p != T::npos ? filename.substr(0, p) : filename;
 }
 
-GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent menu) : 
+GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent* menu) : 
   mWindow(window),
   mFile(file),
   mMenu(menu),

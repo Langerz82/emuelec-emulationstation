@@ -10,7 +10,7 @@ class Window;
 class GuiMoveToFolder : public GuiSettings
 {
 public:
-	GuiMoveToFolder(Window* window, FileData* file);
+	GuiMoveToFolder(Window* window, FileData* file, GuiComponent* menu);
 
   void moveToFolderGame(FileData* file, const std::string& path);
   void createFolder(FileData* file, const std::string& path);
@@ -20,5 +20,6 @@ public:
 protected:
   FileData* mFile;
   Window* mWindow;
+  GuiComponent* mMenu;
 
 };

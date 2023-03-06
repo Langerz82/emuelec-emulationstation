@@ -31,9 +31,10 @@ T remove_extension(T const & filename)
   return p > 0 && p != T::npos ? filename.substr(0, p) : filename;
 }
 
-GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) : 
+GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent menu) : 
   mWindow(window),
   mFile(file),
+  mMenu(menu),
   GuiSettings(window, _("FILE MANAGEMENT").c_str())
 {
   auto theme = ThemeData::getMenuTheme();
@@ -48,6 +49,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       if (!folderOption.empty())
         moveToFolderGame(file, folderOption);
       close();
+      mMenu->close();
   	});
   }
 
@@ -109,6 +111,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       return;
     }
     createFolder(file, path);
+    close();
 	};
 
   row.makeAcceptInputHandler([this, window, file, updateFN]
@@ -138,7 +141,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	auto view = ViewController::get()->getGameListView(sys, false);
 
 	char cmdMvFile[1024];
-  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\"", 
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\" 2>&1 tee /emuelec/logs/mtf.log", 
     sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
 	system(strMvFile.c_str());

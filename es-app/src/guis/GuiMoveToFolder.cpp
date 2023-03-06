@@ -55,7 +55,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
-  size_t pos = fd->getPath().find(base_path(basePath));
+  //size_t pos = basePath.find(base_path(basePath));
   size_t len = base_path(basePath).length()+1;
   std::string subpath = fd->getPath();
 
@@ -65,7 +65,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
         folderoptionsS = basePath;
 
       subpath = basePath;
-      subpath.replace(pos, len, "");
+      subpath.replace(0, len, "");
   
       emuelec_folderopt_def->add(subpath, basePath, folderoptionsS == basePath);
     }
@@ -74,7 +74,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       FolderData* fd = *it;
 
       subpath = fd->getPath();
-      subpath.replace(pos, len, "");
+      subpath.replace(0, len, "");
 
       emuelec_folderopt_def->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
     }

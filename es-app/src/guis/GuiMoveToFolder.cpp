@@ -40,7 +40,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
   auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
 
-  //if (file->getType() == GAME) {
+  if (file->getType() == GAME) {
     addEntry(_("MOVE GAME TO FOLDER"), true, [this, file, emuelec_folderopt_def]
   	{
       std::string folderOption = (emuelec_folderopt_def->getSelected().empty()) ?
@@ -49,14 +49,14 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
         moveToFolderGame(file, folderOption);
       close();
   	});
-  //}
+  }
 
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
 
-  //if (file->getType() == GAME) {
+  if (file->getType() == GAME) {
     if (file->getParent()->getParent() != nullptr) {
       
       if (fds.size() == 0) 
@@ -67,8 +67,8 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
     for (auto it = fds.begin(); it != fds.end(); it++) {
       FolderData* fd = *it;
   
-      size_t pos = fd->getPath().find(basePath);
-      size_t len = basePath.length();
+      size_t pos = fd->getPath().find(base_path(basePath));
+      size_t len = base_path(basePath).length()+1;
       std::string path = fd->getPath();
       path.replace(pos, len, "");
 
@@ -91,7 +91,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       [emuelec_folderopt_def, saveFunc] (std::string val) { 
         saveFunc();
     });
-  //}
+  }
 
 	ComponentListRow row;
 	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"),
@@ -195,8 +195,9 @@ void GuiMoveToFolder::createFolder(FileData* file, const std::string& path)
 		Utils::FileSystem::createDirectory(path.c_str());
 
     std::string showFoldersMode = Settings::getInstance()->getString("FolderViewMode");
-    if (showFoldersMode == "always")
+    if (showFoldersMode == "always") {
       file->getParent()->addChild(new FolderData(path.c_str(), sys, false));
-      //ViewController::get()->reloadGameListView(sys);
+      ViewController::get()->reloadGameListView(sys);
+    }
 	}
 }

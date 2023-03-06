@@ -254,11 +254,13 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			});
 			
 #ifdef _ENABLEEMUELEC
-			mMenu.addEntry(_("MOVE TO FOLDER"), false, [this, game]
-			{
-				mWindow->pushGui(new GuiMoveToFolder(mWindow, game));
-			});
-#endif			
+			if (game->getSystem()->isGameSystem()) {
+				mMenu.addEntry(_("MOVE TO FOLDER"), false, [this, game]
+				{
+					mWindow->pushGui(new GuiMoveToFolder(mWindow, game));
+				});
+			}
+#endif
 		}
 
 #ifdef _ENABLEEMUELEC

@@ -40,7 +40,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
   auto emuelec_folderopt_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "CHOOSE FOLDER", false);
 
-  if (file->getType() == GAME) {
+  //if (file->getType() == GAME) {
     addEntry(_("MOVE GAME TO FOLDER"), true, [this, file, emuelec_folderopt_def]
   	{
       std::string folderOption = (emuelec_folderopt_def->getSelected().empty()) ?
@@ -49,14 +49,14 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
         moveToFolderGame(file, folderOption);
       close();
   	});
-  }
+  //}
 
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
 
-  if (file->getType() == GAME) {
+  //if (file->getType() == GAME) {
     if (file->getParent()->getParent() != nullptr) {
       
       if (fds.size() == 0) 
@@ -75,7 +75,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       emuelec_folderopt_def->add(path, fd->getPath(), folderoptionsS == fd->getPath());
     }
 
-    if (emuelec_folderopt_def->getSelected().empty())
+    if (emuelec_folderopt_def->getSelectedIndex() == -1)
       emuelec_folderopt_def->selectFirstItem();
 
     addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
@@ -91,7 +91,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       [emuelec_folderopt_def, saveFunc] (std::string val) { 
         saveFunc();
     });
-  }
+  //}
 
 	ComponentListRow row;
 	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"),

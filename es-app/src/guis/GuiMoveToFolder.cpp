@@ -55,24 +55,28 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
+  size_t pos = fd->getPath().find(base_path(basePath));
+  size_t len = base_path(basePath).length()+1;
+  std::string subpath = fd->getPath();
 
   if (file->getType() == GAME) {
-    if (file->getParent()->getParent() != nullptr) {
-      
+    if (file->getParent()->getParent() != nullptr) {      
       if (fds.size() == 0) 
         folderoptionsS = basePath;
-      emuelec_folderopt_def->add(basePath, basePath, folderoptionsS == basePath);
+
+      subpath = basePath;
+      subpath.replace(pos, len, "");
+  
+      emuelec_folderopt_def->add(subpath, basePath, folderoptionsS == basePath);
     }
 
     for (auto it = fds.begin(); it != fds.end(); it++) {
       FolderData* fd = *it;
-  
-      size_t pos = fd->getPath().find(base_path(basePath));
-      size_t len = base_path(basePath).length()+1;
-      std::string path = fd->getPath();
-      path.replace(pos, len, "");
 
-      emuelec_folderopt_def->add(path, fd->getPath(), folderoptionsS == fd->getPath());
+      subpath = fd->getPath();
+      subpath.replace(pos, len, "");
+
+      emuelec_folderopt_def->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
     }
 
     if (emuelec_folderopt_def->getSelectedIndex() == -1)

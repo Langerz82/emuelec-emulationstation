@@ -141,7 +141,7 @@ void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 	auto view = ViewController::get()->getGameListView(sys, false);
 
 	char cmdMvFile[1024];
-  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\" 2>&1 tee /emuelec/logs/mtf.log", 
+  snprintf(cmdMvFile, sizeof(cmdMvFile), "mv \"%s\" \"%s\" 2>&1 | tee /emuelec/logs/mtf.log", 
     sourceFile->getFullPath().c_str(), path.c_str());
   std::string strMvFile = cmdMvFile;
 	system(strMvFile.c_str());

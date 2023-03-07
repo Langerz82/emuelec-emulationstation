@@ -4,8 +4,6 @@
 #include "SystemData.h"
 #include "platform.h"
 
-#include "components/OptionListComponent.h"
-
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
@@ -53,7 +51,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   	});
   }
 
-  makeFolderList(file, emuelec_folderopt_def::getInstance()->get());
+  makeFolderList(file, emuelec_folderopt_def);
 
   if (file->getType() == GAME) {
     addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
@@ -85,7 +83,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       return;
     }
     createFolder(file, path);
-    makeFolderList(file, emuelec_folderopt_def::getInstance()->get());
+    makeFolderList(file, emuelec_folderopt_def);
 	};
 
   row.makeAcceptInputHandler([this, window, file, updateFN]
@@ -99,12 +97,8 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   addRow(row);
 }
 
-void GuiMoveToFolder::makeFolderList(FileData* file, GuiComponent* optionList)
+void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent<std::string>* optionList)
 {
-  auto ol = dynamic_cast<OptionListComponent>(*optionList);
-  if (ol == nullptr)
-    return;
-
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");

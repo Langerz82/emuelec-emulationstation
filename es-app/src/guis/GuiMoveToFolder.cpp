@@ -4,6 +4,8 @@
 #include "SystemData.h"
 #include "platform.h"
 
+#include "components/OptionListComponent.h"
+
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
@@ -97,8 +99,12 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   addRow(row);
 }
 
-void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent* optionList)
+void GuiMoveToFolder::makeFolderList(FileData* file, GuiComponent* optionList)
 {
+  auto ol = dynamic_cast<OptionListComponent>(optionList);
+  if (ol == nullptr)
+    return;
+
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
@@ -107,13 +113,13 @@ void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent* option
   std::string subpath = basePath;
   subpath.replace(0, len, "");
 
-  optionList->clear();
+  ol->clear();
 
   if (file->getParent()->getParent() != nullptr) {      
     if (fds.size() == 0) 
       folderoptionsS = basePath;      
 
-    optionList->add(subpath, basePath, folderoptionsS == basePath);
+    ol->add(subpath, basePath, folderoptionsS == basePath);
   }
 
   for (auto it = fds.begin(); it != fds.end(); it++) {
@@ -122,11 +128,11 @@ void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent* option
     subpath = fd->getPath();
     subpath.replace(0, len, "");
 
-    optionList->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
+    ol->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
   }
 
-  if (optionList->getSelectedIndex() == -1)
-    optionList->selectFirstItem();  
+  if (ol->getSelectedIndex() == -1)
+    ol->selectFirstItem();  
 };
 
 void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)

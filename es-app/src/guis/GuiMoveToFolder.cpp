@@ -31,10 +31,9 @@ T remove_extension(T const & filename)
   return p > 0 && p != T::npos ? filename.substr(0, p) : filename;
 }
 
-GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent* menu) : 
+GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) : 
   mWindow(window),
   mFile(file),
-  mMenu(menu),
   GuiSettings(window, _("FILE MANAGEMENT").c_str())
 {
   auto theme = ThemeData::getMenuTheme();
@@ -49,39 +48,14 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent* m
       if (!folderOption.empty())
         moveToFolderGame(file, folderOption);
       close();
-      mMenu->close();
   	});
   }
 
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
-  std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
-  std::string basePath = file->getSystem()->getRootFolder()->getPath();
-  //size_t pos = basePath.find(base_path(basePath));
-  size_t len = base_path(basePath).length()+1;
-  std::string subpath = basePath;
-  subpath.replace(0, len, "");
+  makeFolderList(file, emuelec_folderopt_def);
 
   if (file->getType() == GAME) {
-    if (file->getParent()->getParent() != nullptr) {      
-      if (fds.size() == 0) 
-        folderoptionsS = basePath;      
-  
-      emuelec_folderopt_def->add(subpath, basePath, folderoptionsS == basePath);
-    }
-
-    for (auto it = fds.begin(); it != fds.end(); it++) {
-      FolderData* fd = *it;
-
-      subpath = fd->getPath();
-      subpath.replace(0, len, "");
-
-      emuelec_folderopt_def->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
-    }
-
-    if (emuelec_folderopt_def->getSelectedIndex() == -1)
-      emuelec_folderopt_def->selectFirstItem();
-
     addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
     const std::function<void()> saveFunc([emuelec_folderopt_def] {
       if (emuelec_folderopt_def->changed()) {
@@ -111,7 +85,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent* m
       return;
     }
     createFolder(file, path);
-    close();
+    makeFolderList(file, emuelec_folderopt_def);
 	};
 
   row.makeAcceptInputHandler([this, window, file, updateFN]
@@ -124,6 +98,36 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file, GuiComponent* m
 
   addRow(row);
 }
+
+void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent* optionList)
+{
+  std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
+  std::string basePath = file->getSystem()->getRootFolder()->getPath();
+  size_t len = base_path(basePath).length()+1;
+  std::string subpath = basePath;
+  subpath.replace(0, len, "");
+
+  optionList->clear();
+
+  if (file->getParent()->getParent() != nullptr) {      
+    if (fds.size() == 0) 
+      folderoptionsS = basePath;      
+
+    optionList->add(subpath, basePath, folderoptionsS == basePath);
+  }
+
+  for (auto it = fds.begin(); it != fds.end(); it++) {
+    FolderData* fd = *it;
+
+    subpath = fd->getPath();
+    subpath.replace(0, len, "");
+
+    optionList->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
+  }
+
+  if (optionList->getSelectedIndex() == -1)
+    optionList->selectFirstItem();  
+};
 
 void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)
 {

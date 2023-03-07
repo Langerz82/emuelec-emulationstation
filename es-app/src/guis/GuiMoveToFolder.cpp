@@ -97,7 +97,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   addRow(row);
 }
 
-void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent<std::string>* optionList)
+void GuiMoveToFolder::makeFolderList(FileData* file, std::shared_ptr< OptionListComponent<std::string> > &optionList)
 {
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 
@@ -107,13 +107,13 @@ void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent<std::st
   std::string subpath = basePath;
   subpath.replace(0, len, "");
 
-  ol->clear();
+  optionList->clear();
 
   if (file->getParent()->getParent() != nullptr) {      
     if (fds.size() == 0) 
       folderoptionsS = basePath;      
 
-    ol->add(subpath, basePath, folderoptionsS == basePath);
+    optionList->add(subpath, basePath, folderoptionsS == basePath);
   }
 
   for (auto it = fds.begin(); it != fds.end(); it++) {
@@ -122,11 +122,11 @@ void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent<std::st
     subpath = fd->getPath();
     subpath.replace(0, len, "");
 
-    ol->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
+    optionList->add(subpath, fd->getPath(), folderoptionsS == fd->getPath());
   }
 
-  if (ol->getSelectedIndex() == -1)
-    ol->selectFirstItem();  
+  if (optionList->getSelectedIndex() == -1)
+    optionList->selectFirstItem();  
 };
 
 void GuiMoveToFolder::moveToFolderGame(FileData* file, const std::string& path)

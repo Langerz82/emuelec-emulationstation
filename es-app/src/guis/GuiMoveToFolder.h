@@ -13,7 +13,7 @@ class GuiMoveToFolder : public GuiSettings
 {
 public:
 	GuiMoveToFolder(Window* window, FileData* file);
-  void makeFolderList(FileData* file, OptionListComponent<std::string>* optionList);
+  void makeFolderList(FileData* file, std::shared_ptr< OptionListComponent<std::string> > &optionList);
   void moveToFolderGame(FileData* file, const std::string& path);
   void createFolder(FileData* file, const std::string& path);
   FolderData* getFolderData(FolderData* folder, const std::string& name);

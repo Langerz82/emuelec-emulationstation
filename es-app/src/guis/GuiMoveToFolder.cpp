@@ -53,7 +53,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   	});
   }
 
-  makeFolderList(file, emuelec_folderopt_def);
+  makeFolderList(file, emuelec_folderopt_def::getInstance()->get());
 
   if (file->getType() == GAME) {
     addWithLabel(_("CHOOSE FOLDER"), emuelec_folderopt_def);
@@ -75,7 +75,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 	auto createName = std::make_shared<TextComponent>(window, _("CREATE FOLDER"),
     theme->Text.font, theme->Text.color);
 	row.addElement(createName, true);
-  auto updateFN = [this, window, file](const std::string& newVal)
+  auto updateFN = [this, window, file, emuelec_folderopt_def](const std::string& newVal)
 	{
 		if (newVal.empty()) return;
 
@@ -85,7 +85,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
       return;
     }
     createFolder(file, path);
-    makeFolderList(file, emuelec_folderopt_def);
+    makeFolderList(file, emuelec_folderopt_def::getInstance()->get());
 	};
 
   row.makeAcceptInputHandler([this, window, file, updateFN]
@@ -101,7 +101,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
 void GuiMoveToFolder::makeFolderList(FileData* file, GuiComponent* optionList)
 {
-  auto ol = dynamic_cast<OptionListComponent>(optionList);
+  auto ol = dynamic_cast<OptionListComponent>(*optionList);
   if (ol == nullptr)
     return;
 

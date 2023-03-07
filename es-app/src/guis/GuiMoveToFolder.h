@@ -2,6 +2,7 @@
 
 #include "GuiSettings.h"
 #include "FileData.h"
+#include "components/OptionListComponent.h"
 
 #include <vector>
 

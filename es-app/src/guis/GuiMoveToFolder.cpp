@@ -7,7 +7,7 @@
 #include "views/gamelist/IGameListView.h"
 #include "views/gamelist/ISimpleGameListView.h"
 #include "views/ViewController.h"
-#include "components/OptionListComponent.h"
+
 #include "guis/GuiMsgBox.h"
 #include "guis/GuiTextEditPopupKeyboard.h"
 #include "guis/GuiTextEditPopup.h"

@@ -51,8 +51,6 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   	});
   }
 
-  std::vector<FolderData*> fds = getChildFolders(file->getParent());
-
   makeFolderList(file, emuelec_folderopt_def);
 
   if (file->getType() == GAME) {
@@ -101,6 +99,8 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
 
 void GuiMoveToFolder::makeFolderList(FileData* file, OptionListComponent* optionList)
 {
+  std::vector<FolderData*> fds = getChildFolders(file->getParent());
+
   std::string folderoptionsS = SystemConf::getInstance()->get("folder_option");
   std::string basePath = file->getSystem()->getRootFolder()->getPath();
   size_t len = base_path(basePath).length()+1;

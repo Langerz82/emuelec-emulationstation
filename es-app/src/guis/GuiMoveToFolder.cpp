@@ -97,7 +97,7 @@ GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) :
   addRow(row);
 }
 
-void GuiMoveToFolder::makeFolderList(FileData* file, std::shared_ptr< OptionListComponent<std::string> > &optionList)
+void GuiMoveToFolder::makeFolderList(FileData* file, std::shared_ptr< OptionListComponent<std::string>> optionList)
 {
   std::vector<FolderData*> fds = getChildFolders(file->getParent());
 

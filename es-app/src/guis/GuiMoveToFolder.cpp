@@ -34,7 +34,7 @@ T remove_extension(T const & filename)
 GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) : 
   mWindow(window),
   mFile(file),
-  GuiSettings(window, _("FILE MANAGEMENT").c_str())
+  GuiSettings(window, _("FILE ")+file.getName().c_str())
 {
   auto theme = ThemeData::getMenuTheme();
 
@@ -184,8 +184,10 @@ std::vector<FolderData*> GuiMoveToFolder::getChildFolders(FolderData* folder)
 FolderData* GuiMoveToFolder::getFolderData(FolderData* folder, const std::string& name)
 {
   std::vector<FileData*> children = folder->getChildren();
+  std::string name2;
   for (auto it = children.begin(); it != children.end(); it++) {
-    if ((*it)->getType() == FOLDER && (*it)->getName() == name)
+    name2 = base_name<std::string>((*it)->getPath());
+    if ((*it)->getType() == FOLDER && name2 == name)
       return dynamic_cast<FolderData*>(*it);
   }
   return nullptr;

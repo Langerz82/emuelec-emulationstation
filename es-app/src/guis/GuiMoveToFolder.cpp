@@ -34,7 +34,7 @@ T remove_extension(T const & filename)
 GuiMoveToFolder::GuiMoveToFolder(Window* window, FileData* file) : 
   mWindow(window),
   mFile(file),
-  GuiSettings(window, _("FILE ")+file.getName().c_str())
+  GuiSettings(window, _("FILE ")+file->getName().c_str())
 {
   auto theme = ThemeData::getMenuTheme();
 

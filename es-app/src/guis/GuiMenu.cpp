@@ -4572,15 +4572,6 @@ void GuiMenu::createBtnJoyCfgRemap(Window *window, GuiSettings *systemConfigurat
 
 
 	systemConfiguration->addSaveFunc([window, systemConfiguration, remap_choice, del_choice, btn_choice, remapCount, prefixName, remapName, remapNames, btnCount, btnIndex, editIndex] {
-		// Hack to avoid over-writing defaults.
-		if (btnIndex != -1 && editIndex > 0 && editIndex <= 2)
-		{
-			window->pushGui(new GuiMsgBox(window,  _("CANNOT SAVE DEFAULT BUTTON MAPS."),
-				_("OK")));
-			edit_choice->selectFirstItem();
-			return;
-		}
-
 		int err = 0;
 		if (btnCount == 0)
 			err = 1;

@@ -4973,8 +4973,8 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
       SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
       SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
-      SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "2 1 3 0 4 5 6 7" );
-      SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "0 1 3 4 2 5 6 7" );
+      //SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "2 1 3 0 4 5 6 7" );
+      //SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "0 1 3 4 2 5 6 7" );
 			SystemConf::getInstance()->saveSystemConf();
 
 			int btnCfgIndex = atoi(SystemConf::getInstance()->get(configName + ".joy_btn_cfg").c_str());

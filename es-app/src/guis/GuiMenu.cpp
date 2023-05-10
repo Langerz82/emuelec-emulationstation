@@ -4969,13 +4969,16 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 	{
 		[&] {
 			std::string prefixName = tEmulator;
-			SystemConf::getInstance()->set(prefixName + ".joy_btns", "input a button,input b button,input x button,input y button,input l button,input r button,input l2 button,input r2 button");
-			SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
-      SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
-      SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
-      //SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "2 1 3 0 4 5 6 7" );
-      //SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "0 1 3 4 2 5 6 7" );
-			SystemConf::getInstance()->saveSystemConf();
+			if (SystemConf::getInstance()->get(prefixName + ".joy_btns").empty()) {
+				SystemConf::getInstance()->set(prefixName + ".joy_btns", "input a button,input b button,input x button,input y button,input l button,input r button,input l2 button,input r2 button");
+				SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
+      	SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
+				SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
+      	SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "3 1 0 2 4 5 6 7" );
+				SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "3 0 1 2 4 5 6 7" );
+				SystemConf::getInstance()->set("libretro.joy_btn_order2", "2 3 1 4 0 5 6 7" );
+				SystemConf::getInstance()->saveSystemConf();
+			}
 
 			int btnCfgIndex = atoi(SystemConf::getInstance()->get(configName + ".joy_btn_cfg").c_str());
 			std::vector<int> remapIndexes = int_explode( SystemConf::getInstance()->get(prefixName + ".joy_btn_indexes"));

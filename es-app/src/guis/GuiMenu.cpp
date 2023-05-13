@@ -4965,11 +4965,21 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
       	SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
 				SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
-      	SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "3 1 0 2 4 5 6 7" );
-				SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "3 0 1 2 4 5 6 7" );
-				SystemConf::getInstance()->set("libretro.joy_btn_order2", "2 3 1 4 0 5 6 7" );
-				SystemConf::getInstance()->saveSystemConf();
 			}
+			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order1", "3 4 2 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order2", "3 2 4 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdanceMame.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("AdanceMame.joy_btn_order1", "3 4 2 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdanceMame.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("AdanceMame.joy_btn_order2", "3 2 4 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("libretro.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("libretro.joy_btn_order1", "3 1 0 2 4 5 6 7" );
+			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("libretro.joy_btn_order2", "2 3 1 4 0 5 6 7" );
+
+			SystemConf::getInstance()->saveSystemConf();
 
 			int btnCfgIndex = atoi(SystemConf::getInstance()->get(configName + ".joy_btn_cfg").c_str());
 			std::vector<int> remapIndexes = int_explode( SystemConf::getInstance()->get(prefixName + ".joy_btn_indexes"));

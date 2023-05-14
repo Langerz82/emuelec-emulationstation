@@ -567,6 +567,42 @@ void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfigurati
 {
 	GuiSettings* gamepadConfiguration = new GuiSettings(window, _("GAMEPAD CONFIG"));
 
+	// Retroarch auto Gamepad
+	auto enable_retroarchgp = std::make_shared<SwitchComponent>(window);
+	bool advgpEnabled = SystemConf::getInstance()->get("retroarch_auto_gamepad") == "1";
+	enable_retroarchgp->setState(advgpEnabled);
+	gamepadConfiguration->addWithLabel(_("AUTO CONFIG RETROARCH GAMEPAD"), enable_retroarchgp);
+
+	gamepadConfiguration->addSaveFunc([enable_retroarchgp, window] {
+		bool retroarchgpenabled = enable_retroarchgp->getState();
+		SystemConf::getInstance()->set("retroarch_auto_gamepad", retroarchgpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
+	// Retroarch Wipe
+	auto enable_raWipegp = std::make_shared<SwitchComponent>(window);
+	bool advgpEnabled = SystemConf::getInstance()->get("retroarch_wipe_gamepad") == "1";
+	enable_raWipegp->setState(advgpEnabled);
+	gamepadConfiguration->addWithLabel(_("WIPE RETROARCH CORE GAMEPAD"), enable_raWipegp);
+
+	gamepadConfiguration->addSaveFunc([enable_raWipegp, window] {
+		bool raWipegpenabled = enable_raWipegp->getState();
+		SystemConf::getInstance()->set("retroarch_wipe_gamepad", raWipegpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
+	// FBNeoSA Gamepad
+	auto enable_fbneosagp = std::make_shared<SwitchComponent>(window);
+	bool fbneosagpEnabled = SystemConf::getInstance()->get("fbneosa_auto_gamepad") == "1";
+	enable_fbneosagp->setState(fbneosagpEnabled);
+	gamepadConfiguration->addWithLabel(_("AUTO CONFIG FBNeoSA GAMEPAD"), enable_fbneosagp);
+
+	gamepadConfiguration->addSaveFunc([enable_fbneosagp, window] {
+		bool fbneosagpenabled = enable_fbneosagp->getState();
+		SystemConf::getInstance()->set("fbneosa_auto_gamepad", fbneosagpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
 	// Advmame Gamepad
 	auto enable_advmamegp = std::make_shared<SwitchComponent>(window);
 	bool advgpEnabled = SystemConf::getInstance()->get("advmame_auto_gamepad") == "1";

@@ -579,18 +579,6 @@ void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfigurati
 		SystemConf::getInstance()->saveSystemConf();
 	});
 
-	// Retroarch Wipe
-	auto enable_raWipegp = std::make_shared<SwitchComponent>(window);
-	bool advgpEnabled = SystemConf::getInstance()->get("retroarch_wipe_gamepad") == "1";
-	enable_raWipegp->setState(advgpEnabled);
-	gamepadConfiguration->addWithLabel(_("WIPE RETROARCH CORE GAMEPAD"), enable_raWipegp);
-
-	gamepadConfiguration->addSaveFunc([enable_raWipegp, window] {
-		bool raWipegpenabled = enable_raWipegp->getState();
-		SystemConf::getInstance()->set("retroarch_wipe_gamepad", raWipegpenabled ? "1" : "0");
-		SystemConf::getInstance()->saveSystemConf();
-	});
-
 	// FBNeoSA Gamepad
 	auto enable_fbneosagp = std::make_shared<SwitchComponent>(window);
 	bool fbneosagpEnabled = SystemConf::getInstance()->get("fbneosa_auto_gamepad") == "1";
@@ -5006,10 +4994,10 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order1", "3 4 2 1 0 5 6 7" );
 			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order2").empty())
 				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order2", "3 2 4 1 0 5 6 7" );
-			if (SystemConf::getInstance()->get("AdanceMame.joy_btn_order1").empty())
-				SystemConf::getInstance()->set("AdanceMame.joy_btn_order1", "3 4 2 1 0 5 6 7" );
-			if (SystemConf::getInstance()->get("AdanceMame.joy_btn_order2").empty())
-				SystemConf::getInstance()->set("AdanceMame.joy_btn_order2", "3 2 4 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdvanceMame.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("AdvanceMame.joy_btn_order1", "3 4 2 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdvanceMame.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("AdvanceMame.joy_btn_order2", "3 2 4 1 0 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order1").empty())
 				SystemConf::getInstance()->set("libretro.joy_btn_order1", "3 1 0 2 4 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
@@ -5035,6 +5023,13 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addWithLabel(_("BUTTON REMAP"), btn_choice);
 			systemConfiguration->addWithLabel(_("EDIT REMAP"), edit_choice);
 			systemConfiguration->addWithLabel(_("DELETE REMAP"), del_choice);
+
+			systemConfiguration->addEntry(_("WIPE GAMEPAD CONFIG"), false, [mWindow, prefixName] {
+				mWindow->pushGui(new GuiMsgBox(mWindow, _("PROCEED TO WIPE GAMEPAD CONFIG?"),
+					_("YES"), [prefixName] {
+						runSystemCommand("/usr/bin/wipe_gamepad.sh "+prefixName, "", nullptr);
+					}, _("NO"), nullptr));				
+			});
 
 			systemConfiguration->addSaveFunc([btn_choice, configName, prefixName] {
 				int index = atoi(btn_choice->getSelected().c_str());

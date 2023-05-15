@@ -569,8 +569,8 @@ void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfigurati
 
 	// Retroarch auto Gamepad
 	auto enable_retroarchgp = std::make_shared<SwitchComponent>(window);
-	bool advgpEnabled = SystemConf::getInstance()->get("retroarch_auto_gamepad") == "1";
-	enable_retroarchgp->setState(advgpEnabled);
+	bool ragpEnabled = SystemConf::getInstance()->get("retroarch_auto_gamepad") == "1";
+	enable_retroarchgp->setState(ragpEnabled);
 	gamepadConfiguration->addWithLabel(_("AUTO CONFIG RETROARCH GAMEPAD"), enable_retroarchgp);
 
 	gamepadConfiguration->addSaveFunc([enable_retroarchgp, window] {
@@ -5025,9 +5025,9 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addWithLabel(_("DELETE REMAP"), del_choice);
 
 			std::string tCore = fileData != nullptr ? fileData->getCore(true) : systemData->getCore(true);
-			systemConfiguration->addEntry(_("WIPE GAMEPAD CONFIG"), false, [mWindow, prefixName] {
+			systemConfiguration->addEntry(_("WIPE GAMEPAD CONFIG"), false, [mWindow, tEmulator, tCore] {
 				mWindow->pushGui(new GuiMsgBox(mWindow, _("PROCEED TO WIPE GAMEPAD CONFIG?"),
-					_("YES"), [prefixName] {
+					_("YES"), [tEmulator, tCore] {
 						runSystemCommand("/usr/bin/joy_common.sh WIPE "+tEmulator+" "+tCore, "", nullptr);
 					}, _("NO"), nullptr));				
 			});

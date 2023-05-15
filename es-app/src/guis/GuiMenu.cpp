@@ -5024,10 +5024,11 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addWithLabel(_("EDIT REMAP"), edit_choice);
 			systemConfiguration->addWithLabel(_("DELETE REMAP"), del_choice);
 
+			std::string tCore = fileData != nullptr ? fileData->getCore(true) : systemData->getCore(true);
 			systemConfiguration->addEntry(_("WIPE GAMEPAD CONFIG"), false, [mWindow, prefixName] {
 				mWindow->pushGui(new GuiMsgBox(mWindow, _("PROCEED TO WIPE GAMEPAD CONFIG?"),
 					_("YES"), [prefixName] {
-						runSystemCommand("/usr/bin/wipe_gamepad.sh "+prefixName, "", nullptr);
+						runSystemCommand("/usr/bin/joy_common.sh WIPE "+tEmulator+" "+tCore, "", nullptr);
 					}, _("NO"), nullptr));				
 			});
 

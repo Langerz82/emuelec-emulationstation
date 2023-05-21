@@ -4999,9 +4999,9 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			if (SystemConf::getInstance()->get("AdvanceMame.joy_btn_order2").empty())
 				SystemConf::getInstance()->set("AdvanceMame.joy_btn_order2", "3 2 4 1 0 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order1").empty())
-				SystemConf::getInstance()->set("libretro.joy_btn_order1", "3 1 0 2 4 5 6 7" );
+				SystemConf::getInstance()->set("libretro.joy_btn_order1", "2 1 3 0 4 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
-				SystemConf::getInstance()->set("libretro.joy_btn_order2", "2 3 1 4 0 5 6 7" );
+				SystemConf::getInstance()->set("libretro.joy_btn_order2", "4 2 0 1 3 5 6 7" );
 
 			SystemConf::getInstance()->saveSystemConf();
 

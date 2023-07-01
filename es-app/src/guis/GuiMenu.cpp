@@ -4494,6 +4494,8 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOpti
 	auto btn_choice = std::make_shared< OptionListComponent<std::string> >(window, _("BUTTON REMAP CONFIG"), false);
 
 	std::string joy_btns = SystemConf::getInstance()->get(prefixName + ".joy_btns");
+	if (!SystemConf::getInstance()->get(combination + ".button_names").empty())
+		joy_btns = SystemConf::getInstance()->get(combination + ".button_names");
 	
 	if (joy_btns.empty()) {
 		btn_choice->add("NONE", "-1", true);
@@ -4562,11 +4564,21 @@ void GuiMenu::createBtnJoyCfgRemap(Window *window, GuiSettings *systemConfigurat
 		iOrders = int_explode(sOrder, ' ');
 	}
 
+	std::string joy_btn_names = SystemConf::getInstance()->get("default.button_names");
+	if (joy_btn_names.empty()) {
+		for (int index=0; index < btnCount; ++index)
+		{
+			joy_btn_names += _("JOY BUTTON ")+std::to_string(index);
+		}
+	}
+
+	std::vector<std::string> arr_joy_btn(explode(joy_btn_names));
+
 	for (int index=0; index < btnCount; ++index)
 	{		
 		auto remap = createJoyBtnRemapOptionList(window, prefixName, (btnIndex > -1) ? iOrders[index] : index);
 		remap_choice.push_back(remap);
-		systemConfiguration->addWithLabel(_("JOY BUTTON ")+std::to_string(index), remap);
+		systemConfiguration->addWithLabel(arr_joy_btn[index], remap);
 	}
 
 	// Loops through remaps assigns Event to make sure no remap duplicates exist.
@@ -4830,7 +4842,7 @@ void GuiMenu::deleteBtnJoyCfg(Window *window, GuiSettings *systemConfiguration,
 }
 
 std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnOptionList(Window *window, std::string prefixName,
-	std::string title, int selectId)
+	std::string title, int selectId, std::string combination)
 {
 	auto btn_cfg = std::make_shared< OptionListComponent<std::string> >(window, title, false);
 
@@ -5002,6 +5014,10 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				SystemConf::getInstance()->set("libretro.joy_btn_order1", "2 1 3 0 4 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
 				SystemConf::getInstance()->set("libretro.joy_btn_order2", "4 2 0 1 3 5 6 7" );
+			if (SystemConf::getInstance()->get("mk.button_names").empty())
+				SystemConf::getInstance()->set("mk.button_names", "HK LK HP LP BLOCK BLOCK/RUN NONE NONE" );
+			if (SystemConf::getInstance()->get("sf.button_names").empty())
+				SystemConf::getInstance()->set("sf.button_names", "MP MK SP SK HP HK NONE NONE" );
 
 			SystemConf::getInstance()->saveSystemConf();
 

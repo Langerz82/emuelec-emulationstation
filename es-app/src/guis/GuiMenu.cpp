@@ -4489,7 +4489,7 @@ static std::string toupper(std::string s)
 	return s;
 }
 
-std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOptionList(Window *window, std::string prefixName, int btnIndex, std::string remapName)
+std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOptionList(Window *window, std::string prefixName, std::string remapName, int btnIndex)
 {
 	auto btn_choice = std::make_shared< OptionListComponent<std::string> >(window, _("BUTTON REMAP CONFIG"), false);
 
@@ -4576,7 +4576,7 @@ void GuiMenu::createBtnJoyCfgRemap(Window *window, GuiSettings *systemConfigurat
 
 	for (int index=0; index < btnCount; ++index)
 	{		
-		auto remap = createJoyBtnRemapOptionList(window, prefixName, (btnIndex > -1) ? iOrders[index] : index, remapName);
+		auto remap = createJoyBtnRemapOptionList(window, prefixName, remapName, (btnIndex > -1) ? iOrders[index] : index);
 		remap_choice.push_back(remap);
 		systemConfiguration->addWithLabel(arr_joy_btn[index], remap);
 	}

@@ -4494,9 +4494,10 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOpti
 	auto btn_choice = std::make_shared< OptionListComponent<std::string> >(window, _("BUTTON REMAP CONFIG"), false);
 
 	std::string joy_btns = SystemConf::getInstance()->get(prefixName + ".joy_btns");
-	if (!SystemConf::getInstance()->get(remapName + ".button_names").empty())
-		joy_btns = SystemConf::getInstance()->get(remapName + ".button_names");
-	
+	std::string button_names = SystemConf::getInstance()->get(prefixName + "." + remapName + ".button_names");
+	if (!button_names.empty())
+		joy_btns = button_names;
+
 	if (joy_btns.empty()) {
 		btn_choice->add("NONE", "-1", true);
 		return btn_choice;
@@ -4997,11 +4998,16 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		[&] {
 			std::string prefixName = tEmulator;
 			if (SystemConf::getInstance()->get(prefixName + ".joy_btns").empty()) {
-				SystemConf::getInstance()->set(prefixName + ".joy_btns", "input a button,input b button,input x button,input y button,input l button,input r button,input l2 button,input r2 button");
+				SystemConf::getInstance()->set(prefixName + ".joy_btns", "a button,b button,x button,y button,l button,r button,l2 button,r2 button");
 				SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
       	SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
 				SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
 			}
+
+			//default.button_names=West,South,North,East,L1,R1,L2,R2
+			//mk.button_names=HP,HK,LK,LP,BLOCK,BLOCK/RUN,NONE1,NONE2
+			//sf.button_names=SP,SK,MP,MK,HP,HK,NONE1,NONE2
+
 			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order1").empty())
 				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order1", "3 4 2 1 0 5 6 7" );
 			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order2").empty())
@@ -5014,10 +5020,22 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 				SystemConf::getInstance()->set("libretro.joy_btn_order1", "2 1 3 0 4 5 6 7" );
 			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
 				SystemConf::getInstance()->set("libretro.joy_btn_order2", "4 2 0 1 3 5 6 7" );
-			if (SystemConf::getInstance()->get("mk.button_names").empty())
-				SystemConf::getInstance()->set("mk.button_names", "HK LK HP LP BLOCK BLOCK/RUN NONE NONE" );
-			if (SystemConf::getInstance()->get("sf.button_names").empty())
-				SystemConf::getInstance()->set("sf.button_names", "MP MK SP SK HP HK NONE NONE" );
+			if (SystemConf::getInstance()->get("default.button_names").empty())
+				SystemConf::getInstance()->set("default.button_names", "North Button,East Button,West Button,South Button,L1 Button,R1 Button,L2 Button,R2 Button" );
+
+			if (SystemConf::getInstance()->get("FBNEOSA.mk.button_names").empty())
+				SystemConf::getInstance()->set("FBNEOSA.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("AdvanceMame.mk.button_names").empty())
+				SystemConf::getInstance()->set("AdvanceMame.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("libretro.mk.button_names").empty())
+				SystemConf::getInstance()->set("libretro.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+
+			if (SystemConf::getInstance()->get("FBNEOSA.sf.button_names").empty())
+				SystemConf::getInstance()->set("FBNEOSA.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("AdvanceMame.sf.button_names").empty())
+				SystemConf::getInstance()->set("AdvanceMame.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("libretro.sf.button_names").empty())
+				SystemConf::getInstance()->set("libretro.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
 
 			SystemConf::getInstance()->saveSystemConf();
 

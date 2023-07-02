@@ -5028,14 +5028,14 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			if (SystemConf::getInstance()->get("AdvanceMame.mk.button_names").empty())
 				SystemConf::getInstance()->set("AdvanceMame.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
 			if (SystemConf::getInstance()->get("libretro.mk.button_names").empty())
-				SystemConf::getInstance()->set("libretro.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+				SystemConf::getInstance()->set("libretro.mk.button_names", "BLOCK,LK,HK,HP,LP,BLOCK/RUN,NONE1,NONE2" );
 
 			if (SystemConf::getInstance()->get("FBNEOSA.sf.button_names").empty())
 				SystemConf::getInstance()->set("FBNEOSA.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
 			if (SystemConf::getInstance()->get("AdvanceMame.sf.button_names").empty())
 				SystemConf::getInstance()->set("AdvanceMame.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
 			if (SystemConf::getInstance()->get("libretro.sf.button_names").empty())
-				SystemConf::getInstance()->set("libretro.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
+				SystemConf::getInstance()->set("libretro.sf.button_names", "MP,MK,SK,HP,SP,HK,NONE1,NONE2" );
 
 			SystemConf::getInstance()->saveSystemConf();
 

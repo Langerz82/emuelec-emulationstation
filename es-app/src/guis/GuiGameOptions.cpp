@@ -30,6 +30,7 @@
 #ifdef _ENABLEEMUELEC
 #include <regex>
 #include "platform.h"
+#include "guis/GuiMoveToFolder.h"
 #endif
 
 GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(window),
@@ -251,22 +252,30 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 
 
 			});
-#ifdef _ENABLEEMUELEC			
-			if (!isImageViewer) {
-				if (game->getMetadata(MetaDataId::Hidden) == "false")
+
+#ifdef _ENABLEEMUELEC
+			if (game->getSystem()->isGameSystem()) {
+				mMenu.addEntry(_("MOVE TO FOLDER"), false, [this, game]
 				{
-					mMenu.addEntry(_("HIDE GAME"), false, [this, game]
+					mWindow->pushGui(new GuiMoveToFolder(mWindow, game));
+					close();
+				});
+				if (!isImageViewer) {
+					if (game->getMetadata(MetaDataId::Hidden) == "false")
 					{
-						hideGame(game, true);
-						close();
-					});
-				}
-				else {
-					mMenu.addEntry(_("UNHIDE GAME"), false, [this, game]
-					{
-						hideGame(game, false);
-						close();
-					});
+						mMenu.addEntry(_("HIDE GAME"), false, [this, game]
+						{
+							hideGame(game, true);
+							close();
+						});
+					}
+					else {
+						mMenu.addEntry(_("UNHIDE GAME"), false, [this, game]
+						{
+							hideGame(game, false);
+							close();
+						});
+					}
 				}
 			}
 #endif

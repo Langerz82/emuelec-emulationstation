@@ -37,6 +37,9 @@ static std::map<std::string, std::string> defaults =
 #ifdef _ENABLEEMUELEC
 	{ "system.hostname", "EMUELEC" },
 
+	{ "retroarch_auto_gamepad", "1" },
+	{ "retroarch_wipe_gamepad", "0" },
+	{ "fbneosa_auto_gamepad", "1" },
 	{ "advmame_auto_gamepad", "1" },
 	{ "dolphin_auto_gamepad", "1" },
 	{ "flycast_auto_gamepad", "1" },

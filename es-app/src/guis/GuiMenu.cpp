@@ -650,6 +650,30 @@ void GuiMenu::createGamepadConfig(Window* window, GuiSettings* systemConfigurati
 {
 	GuiSettings* gamepadConfiguration = new GuiSettings(window, _("GAMEPAD CONFIG"));
 
+	// Retroarch auto Gamepad
+	auto enable_retroarchgp = std::make_shared<SwitchComponent>(window);
+	bool ragpEnabled = SystemConf::getInstance()->get("retroarch_auto_gamepad") == "1";
+	enable_retroarchgp->setState(ragpEnabled);
+	gamepadConfiguration->addWithLabel(_("AUTO CONFIG RETROARCH GAMEPAD"), enable_retroarchgp);
+
+	gamepadConfiguration->addSaveFunc([enable_retroarchgp, window] {
+		bool retroarchgpenabled = enable_retroarchgp->getState();
+		SystemConf::getInstance()->set("retroarch_auto_gamepad", retroarchgpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
+	// FBNeoSA Gamepad
+	auto enable_fbneosagp = std::make_shared<SwitchComponent>(window);
+	bool fbneosagpEnabled = SystemConf::getInstance()->get("fbneosa_auto_gamepad") == "1";
+	enable_fbneosagp->setState(fbneosagpEnabled);
+	gamepadConfiguration->addWithLabel(_("AUTO CONFIG FBNeoSA GAMEPAD"), enable_fbneosagp);
+
+	gamepadConfiguration->addSaveFunc([enable_fbneosagp, window] {
+		bool fbneosagpenabled = enable_fbneosagp->getState();
+		SystemConf::getInstance()->set("fbneosa_auto_gamepad", fbneosagpenabled ? "1" : "0");
+		SystemConf::getInstance()->saveSystemConf();
+	});
+
 	// Advmame Gamepad
 	auto enable_advmamegp = std::make_shared<SwitchComponent>(window);
 	bool advgpEnabled = SystemConf::getInstance()->get("advmame_auto_gamepad") == "1";
@@ -1800,23 +1824,20 @@ void GuiMenu::openSystemSettings()
 #ifdef _ENABLEEMUELEC
 	auto emuelec_timezones = std::make_shared<OptionListComponent<std::string> >(mWindow, _("TIMEZONE"), false);
 	std::string currentTimezone = SystemConf::getInstance()->get("system.timezone");
-	if (!test_shell.compare("success")) {
-		if (currentTimezone.empty())
-			currentTimezone = std::string(getShOutput(R"(/usr/bin/emuelec-utils current_timezone)"));
-		std::string a;
-		for(std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils timezones)")); getline(ss, a, ','); ) {
-			emuelec_timezones->add(a, a, currentTimezone == a); // emuelec
-		}
-		s->addWithLabel(_("TIMEZONE"), emuelec_timezones);
-		s->addSaveFunc([emuelec_timezones] {
-			if (emuelec_timezones->changed()) {
-				std::string selectedTimezone = emuelec_timezones->getSelected();
-				runSystemCommand("ln -sf /usr/share/zoneinfo/" + selectedTimezone + " $(readlink /etc/localtime)", "", nullptr);
-			}
-			SystemConf::getInstance()->set("system.timezone", emuelec_timezones->getSelected());
-		});
+	if (currentTimezone.empty())
+		currentTimezone = std::string(getShOutput(R"(/usr/bin/emuelec-utils current_timezone)"));
+	std::string a;
+	for(std::stringstream ss(getShOutput(R"(/usr/bin/emuelec-utils timezones)")); getline(ss, a, ','); ) {
+		emuelec_timezones->add(a, a, currentTimezone == a); // emuelec
 	}
-
+	s->addWithLabel(_("TIMEZONE"), emuelec_timezones);
+	s->addSaveFunc([emuelec_timezones] {
+		if (emuelec_timezones->changed()) {
+			std::string selectedTimezone = emuelec_timezones->getSelected();
+			runSystemCommand("ln -sf /usr/share/zoneinfo/" + selectedTimezone + " $(readlink /etc/localtime)", "", nullptr);
+		}
+		SystemConf::getInstance()->set("system.timezone", emuelec_timezones->getSelected());
+	});
 #endif
 
 	// language choice
@@ -4692,12 +4713,15 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::btn_choice = nullptr;
 std::shared_ptr<OptionListComponent<std::string>> GuiMenu::del_choice = nullptr;
 std::shared_ptr<OptionListComponent<std::string>> GuiMenu::edit_choice = nullptr;
 
-std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOptionList(Window *window, std::string prefixName, int btnIndex)
+std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createJoyBtnRemapOptionList(Window *window, std::string prefixName, std::string remapName, int btnIndex)
 {
 	auto btn_choice = std::make_shared< OptionListComponent<std::string> >(window, _("BUTTON REMAP CONFIG"), false);
 
 	std::string joy_btns = SystemConf::getInstance()->get(prefixName + ".joy_btns");
-	
+	std::string button_names = SystemConf::getInstance()->get(prefixName + "." + remapName + ".button_names");
+	if (!button_names.empty())
+		joy_btns = button_names;
+
 	if (joy_btns.empty()) {
 		btn_choice->add("NONE", "-1", true);
 		return btn_choice;
@@ -4765,11 +4789,21 @@ void GuiMenu::createBtnJoyCfgRemap(Window *window, GuiSettings *systemConfigurat
 		iOrders = int_explode(sOrder, ' ');
 	}
 
+	std::string joy_btn_names = SystemConf::getInstance()->get("default.button_names");
+	if (joy_btn_names.empty()) {
+		for (int index=0; index < btnCount; ++index)
+		{
+			joy_btn_names += _("JOY BUTTON ")+std::to_string(index);
+		}
+	}
+
+	std::vector<std::string> arr_joy_btn(explode(joy_btn_names));
+
 	for (int index=0; index < btnCount; ++index)
 	{		
-		auto remap = createJoyBtnRemapOptionList(window, prefixName, (btnIndex > -1) ? iOrders[index] : index);
+		auto remap = createJoyBtnRemapOptionList(window, prefixName, remapName, (btnIndex > -1) ? iOrders[index] : index);
 		remap_choice.push_back(remap);
-		systemConfiguration->addWithLabel(_("JOY BUTTON ")+std::to_string(index), remap);
+		systemConfiguration->addWithLabel(arr_joy_btn[index], remap);
 	}
 
 	// Loops through remaps assigns Event to make sure no remap duplicates exist.
@@ -4799,15 +4833,6 @@ void GuiMenu::createBtnJoyCfgRemap(Window *window, GuiSettings *systemConfigurat
 
 
 	systemConfiguration->addSaveFunc([window, systemConfiguration, remap_choice, del_choice, btn_choice, remapCount, prefixName, remapName, remapNames, btnCount, btnIndex, editIndex] {
-		// Hack to avoid over-writing defaults.
-		if (btnIndex != -1 && editIndex > 0 && editIndex <= 2)
-		{
-			window->pushGui(new GuiMsgBox(window,  _("CANNOT SAVE DEFAULT BUTTON MAPS."),
-				_("OK")));
-			edit_choice->selectFirstItem();
-			return;
-		}
-
 		int err = 0;
 		if (btnCount == 0)
 			err = 1;
@@ -5196,18 +5221,47 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 	{
 		[&] {
 			std::string prefixName = tEmulator;
-			if (SystemConf::getInstance()->get(prefixName + ".joy_btns").empty() ||
-					SystemConf::getInstance()->get(prefixName + ".joy_btn_names").empty() ||
-					SystemConf::getInstance()->get(prefixName + ".joy_btn_indexes").empty())
-			{
-				SystemConf::getInstance()->set(prefixName + ".joy_btns", "input a button,input b button,input x button,input y button,input r button,input l button,input r2 button,input l2 button");
+			if (SystemConf::getInstance()->get(prefixName + ".joy_btns").empty()) {
+				SystemConf::getInstance()->set(prefixName + ".joy_btns", "a button,b button,x button,y button,l button,r button,l2 button,r2 button");
 				SystemConf::getInstance()->set(prefixName + ".joy_btn_indexes", "1,2" );
-        SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
-        SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
-        SystemConf::getInstance()->set(prefixName + ".joy_btn_order1", "3 4 2 1 0 5 6 7" );
-        SystemConf::getInstance()->set(prefixName + ".joy_btn_order2", "3 2 5 1 0 4 6 7" );
-				SystemConf::getInstance()->saveSystemConf();
+      	SystemConf::getInstance()->set(prefixName + ".joy_btn_names", "mk,sf" );
+				SystemConf::getInstance()->set(prefixName + ".joy_btn_order0", "0 1 2 3 4 5 6 7" );
 			}
+
+			//default.button_names=West,South,North,East,L1,R1,L2,R2
+			//mk.button_names=HP,HK,LK,LP,BLOCK,BLOCK/RUN,NONE1,NONE2
+			//sf.button_names=SP,SK,MP,MK,HP,HK,NONE1,NONE2
+
+			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order1", "3 4 2 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("FBNEOSA.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("FBNEOSA.joy_btn_order2", "3 2 4 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdvanceMame.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("AdvanceMame.joy_btn_order1", "3 4 2 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("AdvanceMame.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("AdvanceMame.joy_btn_order2", "3 2 4 1 0 5 6 7" );
+			if (SystemConf::getInstance()->get("libretro.joy_btn_order1").empty())
+				SystemConf::getInstance()->set("libretro.joy_btn_order1", "2 1 3 0 4 5 6 7" );
+			if (SystemConf::getInstance()->get("libretro.joy_btn_order2").empty())
+				SystemConf::getInstance()->set("libretro.joy_btn_order2", "4 2 0 1 3 5 6 7" );
+			if (SystemConf::getInstance()->get("default.button_names").empty())
+				SystemConf::getInstance()->set("default.button_names", "North Button,East Button,West Button,South Button,L1 Button,R1 Button,L2 Button,R2 Button" );
+
+			if (SystemConf::getInstance()->get("FBNEOSA.mk.button_names").empty())
+				SystemConf::getInstance()->set("FBNEOSA.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("AdvanceMame.mk.button_names").empty())
+				SystemConf::getInstance()->set("AdvanceMame.mk.button_names", "HK,LK,HP,LP,BLOCK,BLOCK/RUN,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("libretro.mk.button_names").empty())
+				SystemConf::getInstance()->set("libretro.mk.button_names", "BLOCK,LK,HK,HP,LP,BLOCK/RUN,NONE1,NONE2" );
+
+			if (SystemConf::getInstance()->get("FBNEOSA.sf.button_names").empty())
+				SystemConf::getInstance()->set("FBNEOSA.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("AdvanceMame.sf.button_names").empty())
+				SystemConf::getInstance()->set("AdvanceMame.sf.button_names", "MP,MK,SP,SK,HP,HK,NONE1,NONE2" );
+			if (SystemConf::getInstance()->get("libretro.sf.button_names").empty())
+				SystemConf::getInstance()->set("libretro.sf.button_names", "MP,MK,SK,HP,SP,HK,NONE1,NONE2" );
+
+			SystemConf::getInstance()->saveSystemConf();
 
 			int btnCfgIndex = atoi(SystemConf::getInstance()->get(configName + ".joy_btn_cfg").c_str());
 			std::vector<int> remapIndexes = int_explode( SystemConf::getInstance()->get(prefixName + ".joy_btn_indexes"));
@@ -5227,6 +5281,14 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addWithLabel(_("BUTTON REMAP"), btn_choice);
 			systemConfiguration->addWithLabel(_("EDIT REMAP"), edit_choice);
 			systemConfiguration->addWithLabel(_("DELETE REMAP"), del_choice);
+
+			std::string tCore = fileData != nullptr ? fileData->getCore(true) : systemData->getCore(true);
+			systemConfiguration->addEntry(_("WIPE GAMEPAD CONFIG"), false, [mWindow, tEmulator, tCore] {
+				mWindow->pushGui(new GuiMsgBox(mWindow, _("PROCEED TO WIPE GAMEPAD CONFIG?"),
+					_("YES"), [tEmulator, tCore] {
+						runSystemCommand("/usr/bin/joy_common.sh WIPE "+tEmulator+" "+tCore, "", nullptr);
+					}, _("NO"), nullptr));				
+			});
 
 			systemConfiguration->addSaveFunc([btn_choice, configName, prefixName] {
 				int index = atoi(btn_choice->getSelected().c_str());

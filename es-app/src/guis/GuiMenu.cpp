@@ -1076,13 +1076,17 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 
 		addFrameBufferOptions(mWindow, dangerZone, "ee_emu", "EMU", nativevideo);
 
-		auto video_changed([mWindow, configName] (std::string val) {
+		auto video_changed([mWindow, configName, videoNativeResolutionMode_choice] (std::string val) {
+			if (!videoNativeResolutionMode_choice->changed())
+				return;
+
 			SystemConf::getInstance()->set(configName + ".nativevideo", val);
-			SystemConf::getInstance()->saveSystemConf();
+			SystemConf::getInstance()->saveSystemConf();				
 		});
 
-		videoNativeResolutionMode_choice->setSelectedChangedCallback([mWindow, video_changed] (std::string val) {
-			video_changed(val);
+		videoNativeResolutionMode_choice->setSelectedChangedCallback(
+			[mWindow, video_changed, videoNativeResolutionMode_choice] (std::string val) {
+				video_changed(val);
 		});
 
 		dangerZone->addSaveFunc([mWindow, video_changed, videoNativeResolutionMode_choice] {

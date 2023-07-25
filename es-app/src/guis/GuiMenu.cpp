@@ -1094,7 +1094,7 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 		auto ee_fbol = createFramebufferOptionList(mWindow, dangerZone, "ee_emu", "EMU", nativevideo);
 		auto ee_fbbol = createFramebufferBorderOptionList(mWindow, dangerZone, "ee_emu", "EMU", nativevideo);
 
-		auto video_changed([mWindow, configName, videoNativeResolutionMode_choice] (std::string val) {
+		auto video_changed([mWindow, configName, videoNativeResolutionMode_choice, es_fbol] (std::string val) {
 			if (!videoNativeResolutionMode_choice->changed())
 				return;
 
@@ -1102,7 +1102,7 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 			
 			std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+ee_videomode);
 			if(ee_framebuffer.empty())
-				es_fbol-?selectFirstItem();
+				es_fbol->selectFirstItem();
 		});
 
 		videoNativeResolutionMode_choice->setSelectedChangedCallback(

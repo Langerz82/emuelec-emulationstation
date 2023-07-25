@@ -883,9 +883,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 	}
 	guiSettings->addWithLabel(header+_(" FRAME BUFFER"), emuelec_frame_buffer);
 
-	auto fbSave = [mWindow, configName, ee_videomode, ee_screen, emuelec_frame_buffer] (std::string selectedFB) {
-		if (!emuelec_frame_buffer->changed())
-			return;
+	auto fbSave = [mWindow, configName, ee_videomode, ee_screen] (std::string selectedFB) {
 
 		if (selectedFB == "auto")
 			selectedFB = "";
@@ -922,11 +920,17 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 
 	emuelec_frame_buffer->setSelectedChangedCallback([mWindow, configName, fbSave, ee_videomode, ee_screen, emuelec_frame_buffer](std::string val)
 	{
+		if (!emuelec_frame_buffer->changed())
+			return;
+		
 		//mWindow->displayNotificationMessage(val);
 		fbSave(val);
 	});
 
 	guiSettings->addSaveFunc([mWindow, configName, fbSave, ee_videomode, ee_screen, emuelec_frame_buffer]() {
+		if (!emuelec_frame_buffer->changed())
+			return;
+
 		//mWindow->displayNotificationMessage(emuelec_frame_buffer->getSelected());
 		fbSave(emuelec_frame_buffer->getSelected());
 	});

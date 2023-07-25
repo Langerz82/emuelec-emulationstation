@@ -1071,8 +1071,8 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 
 		std::string nativevideo = SystemConf::getInstance()->get(configName + ".nativevideo");
 		if (nativevideo.empty()) {
-			nativevideo = ee_videomode;
 			SystemConf::getInstance()->set(configName + ".nativevideo", nativevideo);
+			nativevideo = ee_videomode;
 		}
 
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);

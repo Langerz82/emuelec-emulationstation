@@ -89,7 +89,11 @@ private:
     static void openDangerZone(Window* mWindow, std::string configName);
     static void createGamepadConfig(Window* window, GuiSettings* systemConfiguration);
     static void openExternalMounts(Window* mWindow, std::string configName);
-		static void addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header, std::string ee_videomode);
+		
+		static std::vector<std::string> getResolutionList();
+		static sScreenDimensions getScreenDimensions(std::string ee_videomode);
+		static std::shared_ptr<OptionListComponent<std::string>> createFramebufferOptionList(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header, std::string ee_videomode);
+		static std::shared_ptr<OptionListComponent<std::string>> createFramebufferBorderOptionList(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header, std::string ee_videomode);
 #endif
 
 	void openSystemSettings();

@@ -872,7 +872,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 	ee_screen.width = ee_dimensions[0];
 	ee_screen.height = ee_dimensions[1];
 
-	auto emuelec_frame_buffer = std::make_shared< OptionListComponent<std::string> >(mWindow, "VIDEO MODE", false);
+	auto emuelec_frame_buffer = std::make_shared< OptionListComponent<std::string> >(mWindow, header+_(" VIDEO MODE"), false);
 
 	emuelec_frame_buffer->add("auto", "auto", ee_framebuffer == "auto");
 
@@ -895,7 +895,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 			cfgName = configName + "." + cfgName;
 
 		SystemConf::getInstance()->set(cfgName, selectedFB);
-		SystemConf::getInstance()->saveSystemConf();
+		//SystemConf::getInstance()->saveSystemConf();
 
 		if (configName == "ee_es")
 			mWindow->displayNotificationMessage(_U("\uF011  ") + _("A REBOOT OF THE SYSTEM IS REQUIRED TO APPLY THE NEW CONFIGURATION"));
@@ -1067,8 +1067,8 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 
 		std::string nativevideo = SystemConf::getInstance()->get(configName + ".nativevideo");
 		if (nativevideo.empty()) {
-			SystemConf::getInstance()->set(configName + ".nativevideo", ee_videomode);
 			nativevideo = ee_videomode;
+			SystemConf::getInstance()->set(configName + ".nativevideo", nativevideo);
 		}
 
 		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);

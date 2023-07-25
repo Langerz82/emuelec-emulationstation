@@ -837,7 +837,16 @@ mWindow->pushGui(externalMounts);
 }
 
 #ifdef _ENABLEEMUELEC
-std::vector<std::string> GuiMenu::getResolutionList() {
+
+void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header)
+{
+	std::string videomode = getVideoMode(configName);
+
+	std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+videomode);
+	if (ee_framebuffer.empty()) {
+		ee_framebuffer = "auto";
+	}
+
 	std::vector<std::string> reslist;
 		reslist.push_back("3840 2160");
 		reslist.push_back("2560 1440");
@@ -855,47 +864,29 @@ std::vector<std::string> GuiMenu::getResolutionList() {
 		reslist.push_back("640 480");
 		reslist.push_back("320 240");
 
-	return reslist;
-}
-
-sScreenDimensions GuiMenu::getScreenDimensions(std::string ee_videomode) {
-	sScreenDimensions ee_screen;
-	int* ee_dimensions = getVideoModeDimensions(ee_videomode, getResolutionList());
+	int* ee_dimensions = getVideoModeDimensions(videomode, reslist);
+	static sScreenDimensions ee_screen;
 	ee_screen.width = ee_dimensions[0];
 	ee_screen.height = ee_dimensions[1];
-	return ee_screen;
-}
 
-std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferOptionList(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header, std::string ee_videomode)
-{
-	std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+ee_videomode);
-	if (ee_framebuffer.empty()) {
-		ee_framebuffer = "auto";
-	}
+	auto olcfb = std::make_shared< OptionListComponent<std::string> >(mWindow, header+_(" VIDEO MODE"), false);
 
-	std::vector<std::string> reslist(getResolutionList());
-
-	int* ee_dimensions = getVideoModeDimensions(ee_videomode, reslist);
-
-	static sScreenDimensions ee_screen(getScreenDimensions(ee_videomode));
-
-	auto emuelec_frame_buffer = std::make_shared< OptionListComponent<std::string> >(mWindow, header+_(" VIDEO MODE"), false);
-
-	emuelec_frame_buffer->add("auto", "auto", ee_framebuffer == "auto");
+	olcfb->add("auto", "auto", ee_framebuffer == "auto");
 
 	for (auto it = reslist.cbegin(); it != reslist.cend(); it++) {
 		std::string lbl = *it;
 		lbl = lbl.replace(lbl.find(" "),1,"x");
-		emuelec_frame_buffer->add(lbl, *it, ee_framebuffer == *it);
+		olcfb->add(lbl, *it, ee_framebuffer == *it);
 	}
-	guiSettings->addWithLabel(header+_(" FRAME BUFFER"), emuelec_frame_buffer);
+	guiSettings->addWithLabel(header+_(" FRAME BUFFER"), olcfb);
 
-	auto fbSave = [mWindow, configName, ee_videomode, ee_screen] (std::string selectedFB) {
+	auto fbSave = [mWindow, configName, ee_screen] (std::string selectedFB) {
+		std::string videomode = getVideoMode(configName);
 
 		if (selectedFB == "auto")
 			selectedFB = "";
 
-		std::string cfgName = "framebuffer." + ee_videomode;
+		std::string cfgName = "framebuffer." + videomode;
 		if (!configName.empty())
 			cfgName = configName + "." + cfgName;
 
@@ -904,7 +895,7 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferOpti
 		if (configName == "ee_es")
 			mWindow->displayNotificationMessage(_U("\uF011  ") + _("A REBOOT OF THE SYSTEM IS REQUIRED TO APPLY THE NEW CONFIGURATION"));
 
-		cfgName = "framebuffer_border." + ee_videomode;
+		cfgName = "framebuffer_border." + videomode;
 		if (!configName.empty())
 			cfgName = configName + "." + cfgName;
 
@@ -924,39 +915,27 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferOpti
 		SystemConf::getInstance()->set(cfgName, result);
 	};
 
-	emuelec_frame_buffer->setSelectedChangedCallback([mWindow, configName, fbSave, ee_videomode, ee_screen, emuelec_frame_buffer](std::string val)
+	olcfb->setSelectedChangedCallback([mWindow, configName, fbSave, ee_screen, olcfb](std::string val)
 	{
-		if (!emuelec_frame_buffer->changed())
+		if (!olcfb->changed())
 			return;
 		fbSave(val);
 	});
 
-	guiSettings->addSaveFunc([mWindow, configName, fbSave, ee_videomode, ee_screen, emuelec_frame_buffer]() {
-		if (!emuelec_frame_buffer->changed())
+	guiSettings->addSaveFunc([mWindow, configName, fbSave, ee_screen, olcfb]() {
+		if (!olcfb->changed())
 			return;
-		fbSave(emuelec_frame_buffer->getSelected());
+		fbSave(olcfb->getSelected());
 	});
 
-	return emuelec_frame_buffer;
-}
-
-std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferBorderOptionList(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header, std::string ee_videomode)
-{
-	std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+ee_videomode);
-	if (ee_framebuffer.empty()) {
-		ee_framebuffer = "auto";
-	}
-
-	static sScreenDimensions ee_screen(getScreenDimensions(ee_videomode));
-
-	guiSettings->addEntry(header + _(" FRAME BORDERS"), true, [mWindow, configName, ee_videomode, ee_framebuffer, ee_screen, header] {
+	guiSettings->addEntry(header + _(" FRAME BORDERS"), true, [mWindow, configName, videomode, ee_framebuffer, ee_screen, header] {
 		static sScreenBorders ee_borders;
 		ee_borders.left = 0.0f;
 		ee_borders.right = 0.0f;
 		ee_borders.top = 0.0f;
 		ee_borders.bottom = 0.0f;
 
-		std::string cfgName = "framebuffer_border."+ee_videomode;
+		std::string cfgName = "framebuffer_border."+videomode;
 		if (!configName.empty())
 			cfgName = configName+"."+cfgName;
 
@@ -1003,8 +982,10 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferBord
 		bordersConfig->addWithLabel(_("RIGHT BORDER"), fb_borders[2]);
 		bordersConfig->addWithLabel(_("BOTTOM BORDER"), fb_borders[3]);
 
-		bordersConfig->addSaveFunc([mWindow, configName, ee_videomode, ee_screen, fb_borders]()
+		bordersConfig->addSaveFunc([mWindow, configName, ee_screen, fb_borders]()
 		{
+			std::string videomode = getVideoMode(configName);
+
 			int borders[4] = {0,0,0,0};
 			borders[0] = (int) fb_borders[0]->getValue();
 			borders[1] = (int) fb_borders[1]->getValue();
@@ -1016,7 +997,7 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferBord
 				std::to_string(ee_screen.width-(borders[2])-1)+" "+
 				std::to_string(ee_screen.height-(borders[3])-1);
 
-			std::string cfgName = "framebuffer_border."+ee_videomode;
+			std::string cfgName = "framebuffer_border."+videomode;
 			if (!configName.empty())
 				cfgName = configName+"."+cfgName;
 				
@@ -1028,6 +1009,50 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createFramebufferBord
 		mWindow->pushGui(bordersConfig);
 	});
 
+}
+
+std::shared_ptr<OptionListComponent<std::string>> GuiMenu::getEmuVideo(Window* mWindow, GuiSettings* guiSettings, std::string configName) {
+	auto video_option = createNativeVideoResolutionModeOptionList(mWindow, configName);
+	guiSettings->addWithLabel(_("EMULATOR VIDEO"), video_option);
+
+	std::shared_ptr<OptionListComponent<std::string>> ee_olcfb;
+
+	auto video_changed([mWindow, configName, video_option] (std::string val) {
+		if (!video_option->changed())
+			return;
+
+		SystemConf::getInstance()->set(configName + ".nativevideo", val);
+	});
+
+	guiSettings->addSaveFunc([mWindow, video_changed, video_option] {
+		video_changed(video_option->getSelected());
+	});
+
+	video_option->setSelectedChangedCallback(
+			[mWindow, video_changed] (std::string val) {
+		video_changed(val);
+	});
+
+	return video_option;
+}
+
+std::string GuiMenu::getVideoMode(std::string configName) {
+	std::string ee_videomode = SystemConf::getInstance()->get("ee_videomode");
+	if (ee_videomode.empty())
+		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
+
+	if (Utils::FileSystem::exists("/storage/.config/EE_VIDEO_MODE"))
+		ee_videomode = getShOutput(R"(cat /storage/.config/EE_VIDEO_MODE)");
+
+	if (configName == "ee_es") {
+		return ee_videomode;
+	}
+
+	std::string ee_emu_video = SystemConf::getInstance()->get("global.nativevideo");
+	if (!ee_emu_video.empty())
+		ee_videomode = ee_emu_video;
+
+	return ee_videomode;
 }
 
 #endif
@@ -1073,46 +1098,15 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 #endif
 
 #ifdef _ENABLEEMUELEC
-		std::string ee_videomode = SystemConf::getInstance()->get("ee_videomode");
-		if (ee_videomode.empty())
-			ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
+		std::string videomode = getVideoMode("ee_es");
 
-		if (Utils::FileSystem::exists("/storage/.config/EE_VIDEO_MODE"))
-			ee_videomode = getShOutput(R"(cat /storage/.config/EE_VIDEO_MODE)");
+		addFrameBufferOptions(mWindow, dangerZone, "ee_es", "ES");
 
-		auto es_fbol = createFramebufferOptionList(mWindow, dangerZone, "ee_es", "ES", ee_videomode);
-		auto es_fbbol = createFramebufferBorderOptionList(mWindow, dangerZone, "ee_es", "ES", ee_videomode);
+		auto emuVideo = getEmuVideo(mWindow, dangerZone, configName);
+		
+		videomode = getVideoMode("ee_emu");
 
-		std::string nativevideo = SystemConf::getInstance()->get(configName + ".nativevideo");
-		if (nativevideo.empty()) {
-			nativevideo = ee_videomode;
-		}
-
-		auto videoNativeResolutionMode_choice = createNativeVideoResolutionModeOptionList(mWindow, configName);
-		dangerZone->addWithLabel(_("EMULATOR VIDEO"), videoNativeResolutionMode_choice);
-
-		auto ee_fbol = createFramebufferOptionList(mWindow, dangerZone, "ee_emu", "EMU", nativevideo);
-		auto ee_fbbol = createFramebufferBorderOptionList(mWindow, dangerZone, "ee_emu", "EMU", nativevideo);
-
-		auto video_changed([mWindow, configName, videoNativeResolutionMode_choice, es_fbol, nativevideo] (std::string val) {
-			if (!videoNativeResolutionMode_choice->changed())
-				return;
-
-			SystemConf::getInstance()->set(configName + ".nativevideo", val);
-			
-			std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+nativevideo);
-			if(ee_framebuffer.empty())
-				es_fbol->selectFirstItem();
-		});
-
-		videoNativeResolutionMode_choice->setSelectedChangedCallback(
-			[mWindow, video_changed, videoNativeResolutionMode_choice] (std::string val) {
-				video_changed(val);
-		});
-
-		dangerZone->addSaveFunc([mWindow, video_changed, videoNativeResolutionMode_choice] {
-			video_changed(videoNativeResolutionMode_choice->getSelected());
-		});
+		addFrameBufferOptions(mWindow, dangerZone, "ee_emu", "EMU");
 
 #endif
 

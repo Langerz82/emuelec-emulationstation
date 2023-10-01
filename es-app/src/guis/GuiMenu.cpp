@@ -852,7 +852,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 
 	int* ee_dimensions = getVideoModeDimensions(ee_videomode, reslist);
 
-	static sScreenDimensions ee_screen;
+	sScreenDimensions ee_screen;
 	ee_screen.width = ee_dimensions[0];
 	ee_screen.height = ee_dimensions[1];
 

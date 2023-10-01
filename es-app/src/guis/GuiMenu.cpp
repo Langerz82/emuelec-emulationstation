@@ -5333,6 +5333,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		});
 	}
 
+	addFrameBufferOptions(mWindow, systemConfiguration, configName, "EMU");
 #endif 
 
 	// Screen ratio choice

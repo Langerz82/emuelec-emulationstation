@@ -820,8 +820,10 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 	if (Utils::FileSystem::exists("/storage/.config/EE_VIDEO_MODE"))
 		ee_videomode = getShOutput(R"(cat /storage/.config/EE_VIDEO_MODE)");
 
-	if (configName != "ee_es" && configName != "ee_emu") 
+	if (configName != "ee_es" && configName != "ee_emu") {
 		ee_videomode = SystemConf::getInstance()->get(configName+".nativevideo");
+		configName += ".ee_emu";
+	}
 
 	if (ee_videomode.empty() || ee_videomode == "auto")
 		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");

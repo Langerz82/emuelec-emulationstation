@@ -816,14 +816,17 @@ mWindow->pushGui(externalMounts);
 void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header)
 {
 	std::string ee_videomode = SystemConf::getInstance()->get("ee_videomode");
-	if (ee_videomode.empty() || ee_videomode == "auto")
-		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
 
 	if (Utils::FileSystem::exists("/storage/.config/EE_VIDEO_MODE"))
 		ee_videomode = getShOutput(R"(cat /storage/.config/EE_VIDEO_MODE)");
 
-	if (configName != "ee_es" && configName != "ee_emu") 
+	if (configName != "ee_es" && configName != "ee_emu") {
 		ee_videomode = SystemConf::getInstance()->get(configName+".nativevideo");
+		configName += ".ee_emu";
+	}
+
+	if (ee_videomode.empty() || ee_videomode == "auto")
+		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
 
 	std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+ee_videomode);
 	if (ee_framebuffer.empty()) {
@@ -845,6 +848,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 		reslist.push_back("1024 768");
 		reslist.push_back("800 600");
 		reslist.push_back("640 480");
+		reslist.push_back("320 240");
 
 	int* ee_dimensions = getVideoModeDimensions(ee_videomode, reslist);
 
@@ -1800,6 +1804,7 @@ void GuiMenu::openSystemSettings()
 #ifdef _ENABLEEMUELEC
 	auto emuelec_timezones = std::make_shared<OptionListComponent<std::string> >(mWindow, _("TIMEZONE"), false);
 	std::string currentTimezone = SystemConf::getInstance()->get("system.timezone");
+	std::string test_shell = getShOutput(R"(/usr/bin/emuelec-utils test)");
 	if (!test_shell.compare("success")) {
 		if (currentTimezone.empty())
 			currentTimezone = std::string(getShOutput(R"(/usr/bin/emuelec-utils current_timezone)"));
@@ -5329,6 +5334,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		});
 	}
 
+	addFrameBufferOptions(mWindow, systemConfiguration, configName, "EMU");
 #endif 
 
 	// Screen ratio choice

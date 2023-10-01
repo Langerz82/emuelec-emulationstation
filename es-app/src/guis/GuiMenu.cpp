@@ -816,14 +816,15 @@ mWindow->pushGui(externalMounts);
 void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, std::string configName, std::string header)
 {
 	std::string ee_videomode = SystemConf::getInstance()->get("ee_videomode");
-	if (ee_videomode.empty() || ee_videomode == "auto")
-		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
 
 	if (Utils::FileSystem::exists("/storage/.config/EE_VIDEO_MODE"))
 		ee_videomode = getShOutput(R"(cat /storage/.config/EE_VIDEO_MODE)");
 
 	if (configName != "ee_es" && configName != "ee_emu") 
 		ee_videomode = SystemConf::getInstance()->get(configName+".nativevideo");
+
+	if (ee_videomode.empty() || ee_videomode == "auto")
+		ee_videomode = getShOutput(R"(cat /sys/class/display/mode)");
 
 	std::string ee_framebuffer = SystemConf::getInstance()->get(configName+".framebuffer."+ee_videomode);
 	if (ee_framebuffer.empty()) {

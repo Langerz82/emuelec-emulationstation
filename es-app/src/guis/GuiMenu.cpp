@@ -5335,9 +5335,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			fbSave(emuelec_frame_buffer->getSelected());
 		});
 	}
-
-	addFrameBufferOptions(mWindow, systemConfiguration, configName, "EMU");
-#endif 
+#endif
 
 	// Screen ratio choice
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::ratio))
@@ -5833,7 +5831,12 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 	}
 #endif
 
+#ifdef _ENABLEEMUELEC
+	addFrameBufferOptions(mWindow, systemConfiguration, configName, "EMU");
+#endif
+
 	mWindow->pushGui(systemConfiguration);
+
 }
 
 std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createRatioOptionList(Window *window, std::string configname)

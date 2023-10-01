@@ -848,6 +848,7 @@ void GuiMenu::addFrameBufferOptions(Window* mWindow, GuiSettings* guiSettings, s
 		reslist.push_back("1024 768");
 		reslist.push_back("800 600");
 		reslist.push_back("640 480");
+		reslist.push_back("320 240");
 
 	int* ee_dimensions = getVideoModeDimensions(ee_videomode, reslist);
 

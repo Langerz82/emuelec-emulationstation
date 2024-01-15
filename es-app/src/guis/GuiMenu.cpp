@@ -5000,14 +5000,20 @@ void GuiMenu::deleteBtnJoyCfg(Window *window, GuiSettings *systemConfiguration,
 			return;
 		}
 
+		std::string remapName = del_choice->getSelectedName();
 		// Delete does not remove the existing button maps so any game/emulator references will still work.
 		std::string remapNames = SystemConf::getInstance()->get(prefixName + ".joy_btn_names");
-		std::vector<std::string> remap_names(explode(remapNames));
+		//std::vector<std::string> remap_names(explode(remapNames));
+		remapNames = Utils::String::replace(remapNames, ","+remapName, "");
+		remapNames = Utils::String::replace(remapNames, remapName+",", "");
+		SystemConf::getInstance()->set(prefixName + ".joy_btn_names", remapNames);
 
 		std::string indexes = SystemConf::getInstance()->get(prefixName + ".joy_btn_indexes");
 		std::vector<int> iIndexes(int_explode(indexes));
 
-		std::string sRemapNames = "";
+		del_choice->selectFirstItem();
+		
+		/*std::string sRemapNames = "";
 		int i;
 		for(i=0; i < remap_names.size(); ++i)
 		{
@@ -5016,8 +5022,9 @@ void GuiMenu::deleteBtnJoyCfg(Window *window, GuiSettings *systemConfiguration,
 			if (i > 0)
 				sRemapNames += ",";
 			sRemapNames += remap_names[i];
-		}
-		SystemConf::getInstance()->set(prefixName + ".joy_btn_names", sRemapNames);
+		}*/
+
+		//SystemConf::getInstance()->set(prefixName + ".joy_btn_names", remapNames);
 
 		std::string sIndexes = "";
 		for(i=0; i < iIndexes.size(); ++i)

@@ -76,9 +76,9 @@ std::string SaveState::setupSaveState(FileData* game, const std::string& command
 	if (slot >= -1 && this->config != nullptr && !config->isActiveConfig(game))
 	{
 		if (!config->emulator.empty())
-			cmd = _changeCommandlineArgument(cmd, "--emulator=", config->emulator);
+			cmd = _changeCommandlineArgument(cmd, "--emulator", "="+config->emulator);
 		if (!config->core.empty())
-			cmd = _changeCommandlineArgument(cmd, "--core=", config->core);
+			cmd = _changeCommandlineArgument(cmd, "--core", "="+config->core);
 	}
 #else
 	// Savestate has core information ? Setup correct emulator/core

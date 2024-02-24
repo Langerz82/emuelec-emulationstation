@@ -71,7 +71,7 @@ std::string SaveState::setupSaveState(FileData* game, const std::string& command
 
 	std::string cmd = command;
 
-#ifdef #ifdef _ENABLEEMUELEC
+#ifdef _ENABLEEMUELEC
 	// Savestate has core information ? Setup correct emulator/core
 	if (slot >= -1 && this->config != nullptr && !config->isActiveConfig(game))
 	{

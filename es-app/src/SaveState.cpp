@@ -38,6 +38,34 @@ std::string SaveState::getScreenShot() const
   return screenshot;
 }
 
+#ifdef _ENABLEEMUELEC
+static std::string _changeCommandlineArgument(const std::string& commandLine, const std::string& parameter, const std::string& value)
+{
+	size_t corePos = commandLine.find(parameter.c_str());
+	if (corePos != std::string::npos) 
+	{
+		corePos += parameter.length();
+
+		while (corePos < commandLine.length() && commandLine[corePos] == '=')
+			corePos++;
+
+		int count = 0;
+		while (corePos + count < commandLine.length() && commandLine[corePos+ count] != ' ')
+			count++;
+
+		std::string argument = commandLine;
+
+		corePos++;
+		if (count > 0)
+			argument = argument.erase(corePos, count);
+
+		argument = argument.insert(corePos, value);
+		return argument;
+	}
+
+	return commandLine;
+}
+#else
 static std::string _changeCommandlineArgument(const std::string& commandLine, const std::string& parameter, const std::string& value)
 {
 	size_t corePos = commandLine.find(parameter.c_str());
@@ -63,6 +91,7 @@ static std::string _changeCommandlineArgument(const std::string& commandLine, co
 
 	return commandLine;
 }
+#endif
 
 std::string SaveState::setupSaveState(FileData* game, const std::string& command)
 {
@@ -76,9 +105,9 @@ std::string SaveState::setupSaveState(FileData* game, const std::string& command
 	if (slot >= -1 && this->config != nullptr && !config->isActiveConfig(game))
 	{
 		if (!config->emulator.empty())
-			cmd = _changeCommandlineArgument(cmd, "--emulator", "="+config->emulator);
+			cmd = _changeCommandlineArgument(cmd, "--emulator", config->emulator);
 		if (!config->core.empty())
-			cmd = _changeCommandlineArgument(cmd, "--core", "="+config->core);
+			cmd = _changeCommandlineArgument(cmd, "--core", config->core);
 	}
 #else
 	// Savestate has core information ? Setup correct emulator/core

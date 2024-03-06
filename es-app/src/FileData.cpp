@@ -723,8 +723,11 @@ bool FileData::launchGame(Window* window, LaunchGameOptions options)
 	const std::string rom = Utils::FileSystem::getEscapedPath(getPath());
 	const std::string basename = Utils::FileSystem::getStem(getPath());
 
+#ifdef _ENABLEEMUELEC
+	Scripting::fireEvent("game-start", rom, basename, getName(), system->getName());
+#else
 	Scripting::fireEvent("game-start", rom, basename, getName());
-
+#endif
 	time_t tstart = time(NULL);
 
 	LOG(LogInfo) << "	" << command;

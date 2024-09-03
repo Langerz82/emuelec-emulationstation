@@ -497,7 +497,7 @@ void GuiMenu::openEmuELECSettings()
 			}
 		});
 
-       auto sshd_enabled = std::make_shared<SwitchComponent>(mWindow);
+  	auto sshd_enabled = std::make_shared<SwitchComponent>(mWindow);
 		bool baseEnabled = SystemConf::getInstance()->get("ee_ssh.enabled") == "1";
 		sshd_enabled->setState(baseEnabled);
 		s->addWithLabel(_("ENABLE SSH"), sshd_enabled);
@@ -532,7 +532,7 @@ void GuiMenu::openEmuELECSettings()
 			}
 		});
 
-       auto fps_enabled = std::make_shared<SwitchComponent>(mWindow);
+    auto fps_enabled = std::make_shared<SwitchComponent>(mWindow);
 		bool fpsEnabled = SystemConf::getInstance()->get("global.showFPS") == "1";
 		fps_enabled->setState(fpsEnabled);
 		s->addWithLabel(_("SHOW RETROARCH FPS"), fps_enabled);
@@ -5837,6 +5837,73 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 
 #ifdef _ENABLEEMUELEC
 	addFrameBufferOptions(mWindow, systemConfiguration, configName, "EMU");
+#endif
+
+#ifdef _ENABLEEMUELEC
+	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::midi))
+	{
+		auto ra_midi_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "RETROARCH MIDI", false);
+
+		std::vector<std::string> midi_output;
+		std::string def_midi;
+		std::string midi_cmd = "emuelec-utils midi_output "+currentEmulator+" "+currentCore;
+		for(std::stringstream ss(Utils::Platform::getShOutput(midi_cmd.c_str())); getline(ss, def_midi, ','); ) {
+			if (!std::count(midi_output.begin(), midi_output.end(), def_midi)) {
+				 midi_output.push_back(def_midi);
+			}
+		}
+		//midi_output.push_back("timidity");
+		//midi_output.push_back("mt32d");
+		//midi_output.push_back("fluidsynth");
+		std::string saved_midi = SystemConf::getInstance()->get(configName+".ra_midi_output");
+		ra_midi_def->add("none", "none", saved_midi.empty());
+		for (auto it = midi_output.cbegin(); it != midi_output.cend(); it++)
+			ra_midi_def->add(*it, *it, saved_midi == *it);
+		systemConfiguration->addWithLabel(_("RETROARCH MIDI"), ra_midi_def);
+		systemConfiguration->addSaveFunc([ra_midi_def, configName] {
+			if (ra_midi_def->changed()) {
+				std::string selectedMidiOutput = ra_midi_def->getSelected();
+				if (selectedMidiOutput == "none")
+					selectedMidiOutput="";
+				SystemConf::getInstance()->set(configName+".ra_midi_output", selectedMidiOutput);
+				SystemConf::getInstance()->saveSystemConf();
+			}
+		});
+	}
+#endif
+
+#ifdef _ENABLEEMUELEC
+	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::rotation))
+	{
+		auto ra_rotation_def = std::make_shared< OptionListComponent<std::string> >(mWindow, _("SCREEN ROTATION"), false);
+
+		std::vector<std::string> rotation_output;
+		std::string def_rotation;
+		std::string rotation_cmd = "emuelec-utils rotation_output "+currentEmulator+" "+currentCore;
+		for(std::stringstream ss(Utils::Platform::getShOutput(rotation_cmd.c_str())); getline(ss, def_rotation, ','); ) {
+			if (!std::count(rotation_output.begin(), rotation_output.end(), def_rotation)) {
+				 rotation_output.push_back(def_rotation);
+			}
+		}
+		std::string saved_rotation = SystemConf::getInstance()->get(configName+".rotation_output");
+		ra_rotation_def->add("none", "none", saved_rotation.empty());
+		
+		int rotate_index = 1;
+		for (auto it = rotation_output.cbegin(); it != rotation_output.cend(); it++) {
+			ra_rotation_def->add(*it, std::to_string(rotate_index), atoi(saved_rotation.c_str()) == rotate_index);
+			rotate_index++;
+		}
+		systemConfiguration->addWithLabel(_("SCREEN ROTATION"), ra_rotation_def);
+		systemConfiguration->addSaveFunc([ra_rotation_def, configName] {
+			if (ra_rotation_def->changed()) {
+				std::string selectedRotationOutput = ra_rotation_def->getSelected();
+				if (selectedRotationOutput == "none")
+					selectedRotationOutput="";
+				SystemConf::getInstance()->set(configName+".rotation_output", selectedRotationOutput);
+				SystemConf::getInstance()->saveSystemConf();
+			}
+		});
+	}
 #endif
 
 	mWindow->pushGui(systemConfiguration);

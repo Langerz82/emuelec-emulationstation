@@ -1346,7 +1346,23 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 		addFrameBufferOptions(mWindow, dangerZone, "ee_es", "ES", "");
 		addFrameBufferOptions(mWindow, dangerZone, "", "EMU", "");
 
-    dangerZone->addEntry(_("CLOUD BACKUP SETTINGS AND GAME SAVES"), true, [mWindow] { 
+#ifdef _ENABLEEMUELEC
+		auto ESUpdateVal = [this](const std::string& newVal)
+		{
+			Utils::Platform::ProcessStartInfo("echo \""+newVal+"\" > /emuelec/configs/ES_ARGS").run();
+			SystemConf::getInstance()->set("ee_es_arguments", newVal);
+			SystemConf::getInstance()->saveSystemConf();
+		};
+
+		dangerZone->addEntry(_("ADD EMUSTATION ARGUMENTS"), true, [mWindow] {
+			if (Settings::getInstance()->getBool("UseOSK"))
+				mWindow->pushGui(new GuiTextEditPopupKeyboard(mWindow, _("ADD EMUSTATION ARGUMENTS"), SystemConf::getInstance()->get("ee_es_arguments"), ESUpdateVal, false));
+			else
+				mWindow->pushGui(new GuiTextEditPopup(mWindow, _("ADD EMUSTATION ARGUMENTS"), SystemConf::getInstance()->get("ee_es_arguments"), ESUpdateVal, false));
+		 });
+#endif
+
+    dangerZone->addEntry(_("CLOUD BACKUP SETTINGS AND GAME SAVES"), true, [mWindow] {
     mWindow->pushGui(new GuiMsgBox(mWindow, _("WARNING THIS WILL RESTART EMULATIONSTATION!\n\nThis will backup your game saves, savestates and emuelec configs to the cloud service configured on rclone.conf\n\nBACKUP TO CLOUD AND RESTART?"), _("YES"),
 				[] { 
 				Utils::Platform::ProcessStartInfo("systemd-run /usr/bin/emuelec-utils ee_cloud_backup backup").run();

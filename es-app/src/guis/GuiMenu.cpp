@@ -1347,8 +1347,6 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 		addFrameBufferOptions(mWindow, dangerZone, "", "EMU", "");
 
 #ifdef _ENABLEEMUELEC
-
-
 		dangerZone->addEntry(_("ADD EMUSTATION ARGUMENTS"), true, [mWindow] {
 			std::string argsFilename = "/emuelec/configs/ES_ARGS";
 			auto updateVal = [argsFilename](const std::string& newVal)
@@ -1388,7 +1386,6 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 			else
 				mWindow->pushGui(new GuiTextEditPopup(mWindow, _("ADD RETROARCH ARGUMENTS"), fileText, updateVal, false));
 		 });
-
 #endif
 
     dangerZone->addEntry(_("CLOUD BACKUP SETTINGS AND GAME SAVES"), true, [mWindow] {

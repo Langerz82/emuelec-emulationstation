@@ -1347,19 +1347,44 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 		addFrameBufferOptions(mWindow, dangerZone, "", "EMU", "");
 
 #ifdef _ENABLEEMUELEC
-		auto ESUpdateVal = [this](const std::string& newVal)
+		std::string esArgsFileName = "/emuelec/configs/ES_ARGS";
+		auto ESUpdateVal = [this, esArgsFileName](const std::string& newVal)
 		{
-			Utils::Platform::ProcessStartInfo("echo \""+newVal+"\" > /emuelec/configs/ES_ARGS").run();
-			SystemConf::getInstance()->set("ee_es_arguments", newVal);
-			SystemConf::getInstance()->saveSystemConf();
+			if (newVal.empty())
+				return;
+
+			if (Utils::FileSystem::exists(esArgsFileName))
+				Utils::FileSystem::removeFile(esArgsFileName);
+
+			Utils::FileSystem::writeAllText(esArgsFileName, newVal);
 		};
 
 		dangerZone->addEntry(_("ADD EMUSTATION ARGUMENTS"), true, [mWindow] {
+			std::string fileText = Utils::FileSystem::readAllText(esArgsFileName);
 			if (Settings::getInstance()->getBool("UseOSK"))
-				mWindow->pushGui(new GuiTextEditPopupKeyboard(mWindow, _("ADD EMUSTATION ARGUMENTS"), SystemConf::getInstance()->get("ee_es_arguments"), ESUpdateVal, false));
+				mWindow->pushGui(new GuiTextEditPopupKeyboard(mWindow, _("ADD EMUSTATION ARGUMENTS"), fileText, ESUpdateVal, false));
 			else
-				mWindow->pushGui(new GuiTextEditPopup(mWindow, _("ADD EMUSTATION ARGUMENTS"), SystemConf::getInstance()->get("ee_es_arguments"), ESUpdateVal, false));
+				mWindow->pushGui(new GuiTextEditPopup(mWindow, _("ADD EMUSTATION ARGUMENTS"), fileText, ESUpdateVal, false));
 		 });
+
+		std::string raArgsFileName = "/emuelec/configs/RA_ARGS";
+ 		auto RAUpdateVal = [this, raArgsFileName](const std::string& newVal)
+ 		{
+ 			if (newVal.empty())
+ 				return;
+
+ 			if (Utils::FileSystem::exists(raArgsFileName))
+ 				Utils::FileSystem::removeFile(raArgsFileName);
+
+ 			Utils::FileSystem::writeAllText(raArgsFileName, newVal);
+ 		};
+ 		dangerZone->addEntry(_("ADD RETROARCH ARGUMENTS"), true, [mWindow] {
+ 			std::string fileText = Utils::FileSystem::readAllText(raArgsFileName);
+ 			if (Settings::getInstance()->getBool("UseOSK"))
+ 				mWindow->pushGui(new GuiTextEditPopupKeyboard(mWindow, _("ADD RETROARCH ARGUMENTS"), fileText, RAUpdateVal, false));
+ 			else
+ 				mWindow->pushGui(new GuiTextEditPopup(mWindow, _("ADD RETROARCH ARGUMENTS"), fileText, RAUpdateVal, false));
+ 		 });
 #endif
 
     dangerZone->addEntry(_("CLOUD BACKUP SETTINGS AND GAME SAVES"), true, [mWindow] {

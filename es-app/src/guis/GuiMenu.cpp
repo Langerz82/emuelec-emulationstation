@@ -1372,13 +1372,11 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 			std::string argsFilename = "/emuelec/configs/ES_ARGS";
 			auto updateVal = [argsFilename](const std::string& newVal)
 			{
-				if (newVal.empty())
-					return;
-
 				if (Utils::FileSystem::exists(argsFilename))
 					Utils::FileSystem::removeFile(argsFilename);
 
-				Utils::FileSystem::writeAllText(argsFilename, newVal);
+				if (!newVal.empty())
+					Utils::FileSystem::writeAllText(argsFilename, newVal);
 			};
 
 			std::string fileText = Utils::FileSystem::readAllText(argsFilename);
@@ -1392,13 +1390,11 @@ void GuiMenu::openDangerZone(Window* mWindow, std::string configName)
 			std::string argsFilename = "/emuelec/configs/RA_ARGS";
 			auto updateVal = [argsFilename](const std::string& newVal)
 			{
-				if (newVal.empty())
-					return;
-
 				if (Utils::FileSystem::exists(argsFilename))
 					Utils::FileSystem::removeFile(argsFilename);
 
-				Utils::FileSystem::writeAllText(argsFilename, newVal);
+				if (!newVal.empty())
+					Utils::FileSystem::writeAllText(argsFilename, newVal);
 			};
 
 			std::string fileText = Utils::FileSystem::readAllText(argsFilename);

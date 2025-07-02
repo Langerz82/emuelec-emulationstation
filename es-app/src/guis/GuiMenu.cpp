@@ -4960,7 +4960,12 @@ void GuiMenu::openQuitMenu_static(Window *window, bool quickAccessMenu, bool ani
 			}, _("NO"), nullptr));
 		}, "iconControllers");
 
-		
+#ifndef _ENABLEEMUELEC
+		s->addEntry(_("KILL LIBRESPOT"), false, [] {
+            system("/emuelec/scripts/librekill.sh");
+        }, "iconLibrekill");
+#endif
+
 		s->addEntry(_("REBOOT FROM NAND"), false, [window] {
 			window->pushGui(new GuiMsgBox(window, _("REALLY REBOOT FROM NAND?"), _("YES"),
 				[] {
@@ -4973,6 +4978,7 @@ void GuiMenu::openQuitMenu_static(Window *window, bool quickAccessMenu, bool ani
 		}, "iconAdvanced");
 	}
 
+#ifndef _ENABLEEMUELEC
 	// AUTO SHUTDOWN TIMEOUT
 	auto shutdownSlider = std::make_shared<SliderComponent>(window, 0.0f, 1440.0f, 10.0f, "min");
 
@@ -4990,6 +4996,7 @@ void GuiMenu::openQuitMenu_static(Window *window, bool quickAccessMenu, bool ani
 		SystemConf::getInstance()->set("ee_auto_shutdown_timeout", std::to_string(value));
 		SystemConf::getInstance()->saveSystemConf();
 	});
+#endif
 
 #endif
 

@@ -702,7 +702,7 @@ void GuiMenu::openEmuELECSettings()
 	s->addFileBrowser(_("CUSTOM EXIT-SPLASH VIDEO"), "ee_customexitsplashvideo", GuiFileBrowser::VIDEO);
 
 	auto splashExitTime = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "seconds");
-	splashExitTime->setValue(atof(SystemConf::getInstance()->get("ee_splash_loading_duration").c_str()));
+	splashExitTime->setValue(atof(SystemConf::getInstance()->get("ee_splash_exit_duration").c_str()));
 	splashExitTime->setOnValueChanged([](const float &newVal) { 
 		auto val = std::to_string((int)Math::round(newVal));
 		SystemConf::getInstance()->set("ee_splash_exit_duration", val);

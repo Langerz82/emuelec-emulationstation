@@ -709,11 +709,16 @@ void GuiMenu::openEmuELECSettings()
 	});
 	s->addWithLabel(_("SPLASH EXIT DURATION"), splashExitTime);
 
-	s->addSaveFunc([splashLoadingOptionList, splashExitOptionList, splashLoadingTime, splashExitTime] {
+	auto enable_splashasync = std::make_shared<SwitchComponent>(mWindow);
+	enable_splashasync->setState(SystemConf::getInstance()->get("ee_splash_async.enabled") == "1");
+	s->addWithLabel(_("SPLASH LOADING ASYNC"), enable_splashasync);
+
+	s->addSaveFunc([splashLoadingOptionList, splashExitOptionList, splashLoadingTime, splashExitTime, enable_splashasync] {
 		SystemConf::getInstance()->set("ee_splashloading", splashLoadingOptionList->getSelected());
 		SystemConf::getInstance()->set("ee_splashexit", splashExitOptionList->getSelected());
 		SystemConf::getInstance()->set("ee_splash_loading_duration", std::to_string((int)round(splashLoadingTime->getValue())));
 		SystemConf::getInstance()->set("ee_splash_exit_duration", std::to_string((int)round(splashExitTime->getValue())));
+		SystemConf::getInstance()->set("ee_splash_async.enabled", enable_splashasync->getState() ? "1" : "0");
 		SystemConf::getInstance()->saveSystemConf();
 	});
 

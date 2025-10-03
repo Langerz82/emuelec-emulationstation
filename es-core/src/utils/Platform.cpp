@@ -144,16 +144,12 @@ namespace Utils
 
 			return 1;
 #else
-			// getting the output when in a pipe is not easy...
-			// https://stackoverflow.com/questions/1221833/pipe-output-and-capture-exit-status-in-bash
-			std::string cmdOutput = "((((" + cmd_utf8 + " 2> " + Utils::FileSystem::combine(Paths::getLogPath(), stderrFilename) + " ; echo $? >&3) | head -300 > " + Utils::FileSystem::combine(Paths::getLogPath(), stdoutFilename) + ") 3>&1) | (read xs; exit $xs))";
-			if (!Log::enabled())
-			  cmdOutput = "((((" + cmd_utf8 + " 2> /dev/null ; echo $? >&3) | head -300 > /dev/null) 3>&1) | (read xs; exit $xs))";
+	std::string cmdOutput = " 2> " + Utils::FileSystem::combine(Paths::getLogPath(), stderrFilename) + " | head -300 > " + Utils::FileSystem::combine(Paths::getLogPath(), stdoutFilename);
+	if (!Log::enabled())
+		cmdOutput = " 2> /dev/null | head -300 > /dev/null";
 
-			if (waitForExit) {
-			  int n = system(cmdOutput.c_str());
-			  return WEXITSTATUS(n);
-			}
+	if (waitForExit)
+		return system((cmd_utf8 + cmdOutput).c_str());
 
 			// fork the current process
 			pid_t ret = fork();

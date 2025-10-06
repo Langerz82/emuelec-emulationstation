@@ -5083,7 +5083,6 @@ void GuiMenu::openSoundSettings()
 #endif
 		volume->setValue((float)VolumeControl::getInstance()->getVolume());
 		volume->setOnValueChanged([](const float &newVal) { VolumeControl::getInstance()->setVolume((int)Math::round(newVal)); });
-
 		s->addWithLabel(_("SYSTEM VOLUME"), volume);
 		s->addSaveFunc([this, volume]
 		{

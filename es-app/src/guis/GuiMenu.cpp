@@ -34,6 +34,7 @@
 #ifdef _ENABLEEMUELEC
 	#include "utils/StringUtil.h"
 #endif
+
 #include "SystemConf.h"
 #include "ApiSystem.h"
 #include "InputManager.h"
@@ -64,6 +65,12 @@
 #include "TextToSpeech.h"
 #include "Paths.h"
 #include <set> 
+
+#if !WIN32
+#include <vector>
+#include <string>
+#include <utility>
+#endif
 
 #if WIN32
 #include "Win32ApiSystem.h"
@@ -738,7 +745,6 @@ void GuiMenu::createConfigureSplash(Window* mWindow, int menuIndex)
 	splashLoadingPlatformRoms->setState(SystemConf::getInstance()->get("ee_splash_loading_platform_roms") != "0");
 	s->addWithLabel(_("SPLASH LOAD PLATFORMS AND ROMS"), splashLoadingPlatformRoms);
 	
-
 	auto splashLoadingTime = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "seconds");
 
 	auto splashDuration = SystemConf::getInstance()->get("ee_splash_loading_duration");
@@ -1866,6 +1872,7 @@ void GuiMenu::openDeveloperSettings()
 		});
 	}
 #endif
+
 #ifndef _ENABLEEMUELEC
 	// WEB ACCESS
 	auto hostName = Utils::String::toLower(ApiSystem::getInstance()->getHostsName());
@@ -2603,7 +2610,7 @@ void GuiMenu::openSystemSettings()
 #endif
 #endif
 		});
-        
+
        s->addSaveFunc([this, brightnessComponent] {
             SystemConf::getInstance()->set("brightness.level", std::to_string((int)Math::round(brightnessComponent->getValue())));
        });
@@ -2848,7 +2855,6 @@ void GuiMenu::openSystemSettings()
 			s->addSwitch(_("CHECK BIOS FILES BEFORE RUNNING A GAME"), "CheckBiosesAtLaunch", true);
 #endif
 		}
-
 	}
 #endif
 	std::shared_ptr<OptionListComponent<std::string>> overclock_choice;
@@ -3808,6 +3814,7 @@ void GuiMenu::openGamesSettings()
 		s->addWithDescription(_("GAME ASPECT RATIO"), _("Force the game to render in this aspect ratio."), ratio_choice);
 		s->addSaveFunc([ratio_choice] { SystemConf::getInstance()->set("global.ratio", ratio_choice->getSelected()); });
 	}
+
 #ifndef _ENABLEEMUELEC
 	// video resolution mode
 	if (ApiSystem::getInstance()->isScriptingSupported(ApiSystem::RESOLUTION) && !hasGlobalFeature("videomode"))
@@ -4011,6 +4018,7 @@ void GuiMenu::openGamesSettings()
 #endif
 		}
 	}
+	
 #endif	
 	// latency reduction
 	if (!hasGlobalFeature("runahead"))
@@ -5222,6 +5230,7 @@ void GuiMenu::openSoundSettings()
     });
 
 	s->addGroup(_("SOUNDS"));
+
 #ifdef _ENABLEEMUELEC
 	s->addFileBrowser(_("CUSTOM MENU SCROLL SOUND"), "ee_menuscrollsound", GuiFileBrowser::AUDIO); 
 #endif
@@ -5237,6 +5246,66 @@ void GuiMenu::openSoundSettings()
 	s->addSwitch(_("ENABLE VIDEO PREVIEW AUDIO"), "VideoAudio", true);
 	
 	mWindow->pushGui(s);
+}
+
+// Provides a complete list of ISO 3166-1 alpha-2 country codes.
+std::vector<std::pair<std::string, std::string>> getCountryCodes()
+{
+#ifdef _ENABLEEMUELEC
+return {};
+#endif
+    return {
+        { "AF", "Afghanistan" }, { "AX", "Åland Islands" }, { "AL", "Albania" }, { "DZ", "Algeria" }, { "AS", "American Samoa" },
+        { "AD", "Andorra" }, { "AO", "Angola" }, { "AI", "Anguilla" }, { "AQ", "Antarctica" }, { "AG", "Antigua and Barbuda" },
+        { "AR", "Argentina" }, { "AM", "Armenia" }, { "AW", "Aruba" }, { "AU", "Australia" }, { "AT", "Austria" },
+        { "AZ", "Azerbaijan" }, { "BS", "Bahamas" }, { "BH", "Bahrain" }, { "BD", "Bangladesh" }, { "BB", "Barbados" },
+        { "BY", "Belarus" }, { "BE", "Belgium" }, { "BZ", "Belize" }, { "BJ", "Benin" }, { "BM", "Bermuda" },
+        { "BT", "Bhutan" }, { "BO", "Bolivia" }, { "BQ", "Bonaire, Sint Eustatius and Saba" }, { "BA", "Bosnia and Herzegovina" }, { "BW", "Botswana" },
+        { "BV", "Bouvet Island" }, { "BR", "Brazil" }, { "IO", "British Indian Ocean Territory" }, { "BN", "Brunei Darussalam" }, { "BG", "Bulgaria" },
+        { "BF", "Burkina Faso" }, { "BI", "Burundi" }, { "CV", "Cabo Verde" }, { "KH", "Cambodia" }, { "CM", "Cameroon" },
+        { "CA", "Canada" }, { "KY", "Cayman Islands" }, { "CF", "Central African Republic" }, { "TD", "Chad" }, { "CL", "Chile" },
+        { "CN", "China" }, { "CX", "Christmas Island" }, { "CC", "Cocos (Keeling) Islands" }, { "CO", "Colombia" }, { "KM", "Comoros" },
+        { "CG", "Congo" }, { "CD", "Congo, Democratic Republic of the" }, { "CK", "Cook Islands" }, { "CR", "Costa Rica" }, { "CI", "Côte d'Ivoire" },
+        { "HR", "Croatia" }, { "CU", "Cuba" }, { "CW", "Curaçao" }, { "CY", "Cyprus" }, { "CZ", "Czechia" },
+        { "DK", "Denmark" }, { "DJ", "Djibouti" }, { "DM", "Dominica" }, { "DO", "Dominican Republic" }, { "EC", "Ecuador" },
+        { "EG", "Egypt" }, { "SV", "El Salvador" }, { "GQ", "Equatorial Guinea" }, { "ER", "Eritrea" }, { "EE", "Estonia" },
+        { "SZ", "Eswatini" }, { "ET", "Ethiopia" }, { "FK", "Falkland Islands (Malvinas)" }, { "FO", "Faroe Islands" }, { "FJ", "Fiji" },
+        { "FI", "Finland" }, { "FR", "France" }, { "GF", "French Guiana" }, { "PF", "French Polynesia" }, { "TF", "French Southern Territories" },
+        { "GA", "Gabon" }, { "GM", "Gambia" }, { "GE", "Georgia" }, { "DE", "Germany" }, { "GH", "Ghana" },
+        { "GI", "Gibraltar" }, { "GR", "Greece" }, { "GL", "Greenland" }, { "GD", "Grenada" }, { "GP", "Guadeloupe" },
+        { "GU", "Guam" }, { "GT", "Guatemala" }, { "GG", "Guernsey" }, { "GN", "Guinea" }, { "GW", "Guinea-Bissau" },
+        { "GY", "Guyana" }, { "HT", "Haiti" }, { "HM", "Heard Island and McDonald Islands" }, { "VA", "Holy See" }, { "HN", "Honduras" },
+        { "HK", "Hong Kong" }, { "HU", "Hungary" }, { "IS", "Iceland" }, { "IN", "India" }, { "ID", "Indonesia" },
+        { "IR", "Iran" }, { "IQ", "Iraq" }, { "IE", "Ireland" }, { "IM", "Isle of Man" }, { "IL", "Israel" },
+        { "IT", "Italy" }, { "JM", "Jamaica" }, { "JP", "Japan" }, { "JE", "Jersey" }, { "JO", "Jordan" },
+        { "KZ", "Kazakhstan" }, { "KE", "Kenya" }, { "KI", "Kiribati" }, { "KP", "Korea, Democratic People's Republic of" }, { "KR", "Korea, Republic of" },
+        { "KW", "Kuwait" }, { "KG", "Kyrgyzstan" }, { "LA", "Lao People's Democratic Republic" }, { "LV", "Latvia" }, { "LB", "Lebanon" },
+        { "LS", "Lesotho" }, { "LR", "Liberia" }, { "LY", "Libya" }, { "LI", "Liechtenstein" }, { "LT", "Lithuania" },
+        { "LU", "Luxembourg" }, { "MO", "Macao" }, { "MG", "Madagascar" }, { "MW", "Malawi" }, { "MY", "Malaysia" },
+        { "MV", "Maldives" }, { "ML", "Mali" }, { "MT", "Malta" }, { "MH", "Marshall Islands" }, { "MQ", "Martinique" },
+        { "MR", "Mauritania" }, { "MU", "Mauritius" }, { "YT", "Mayotte" }, { "MX", "Mexico" }, { "FM", "Micronesia" },
+        { "MD", "Moldova" }, { "MC", "Monaco" }, { "MN", "Mongolia" }, { "ME", "Montenegro" }, { "MS", "Montserrat" },
+        { "MA", "Morocco" }, { "MZ", "Mozambique" }, { "MM", "Myanmar" }, { "NA", "Namibia" }, { "NR", "Nauru" },
+        { "NP", "Nepal" }, { "NL", "Netherlands" }, { "NC", "New Caledonia" }, { "NZ", "New Zealand" }, { "NI", "Nicaragua" },
+        { "NE", "Niger" }, { "NG", "Nigeria" }, { "NU", "Niue" }, { "NF", "Norfolk Island" }, { "MK", "North Macedonia" },
+        { "MP", "Northern Mariana Islands" }, { "NO", "Norway" }, { "OM", "Oman" }, { "PK", "Pakistan" }, { "PW", "Palau" },
+        { "PS", "Palestine, State of" }, { "PA", "Panama" }, { "PG", "Papua New Guinea" }, { "PY", "Paraguay" }, { "PE", "Peru" },
+        { "PH", "Philippines" }, { "PN", "Pitcairn" }, { "PL", "Poland" }, { "PT", "Portugal" }, { "PR", "Puerto Rico" },
+        { "QA", "Qatar" }, { "RE", "Réunion" }, { "RO", "Romania" }, { "RU", "Russian Federation" }, { "RW", "Rwanda" },
+        { "BL", "Saint Barthélemy" }, { "SH", "Saint Helena, Ascension and Tristan da Cunha" }, { "KN", "Saint Kitts and Nevis" }, { "LC", "Saint Lucia" }, { "MF", "Saint Martin (French part)" },
+        { "PM", "Saint Pierre and Miquelon" }, { "VC", "Saint Vincent and the Grenadines" }, { "WS", "Samoa" }, { "SM", "San Marino" }, { "ST", "Sao Tome and Principe" },
+        { "SA", "Saudi Arabia" }, { "SN", "Senegal" }, { "RS", "Serbia" }, { "SC", "Seychelles" }, { "SL", "Sierra Leone" },
+        { "SG", "Singapore" }, { "SX", "Sint Maarten (Dutch part)" }, { "SK", "Slovakia" }, { "SI", "Slovenia" }, { "SB", "Solomon Islands" },
+        { "SO", "Somalia" }, { "ZA", "South Africa" }, { "GS", "South Georgia and the South Sandwich Islands" }, { "SS", "South Sudan" }, { "ES", "Spain" },
+        { "LK", "Sri Lanka" }, { "SD", "Sudan" }, { "SR", "Suriname" }, { "SJ", "Svalbard and Jan Mayen" }, { "SE", "Sweden" },
+        { "CH", "Switzerland" }, { "SY", "Syrian Arab Republic" }, { "TW", "Taiwan" }, { "TJ", "Tajikistan" }, { "TZ", "Tanzania" },
+        { "TH", "Thailand" }, { "TL", "Timor-Leste" }, { "TG", "Togo" }, { "TK", "Tokelau" }, { "TO", "Tonga" },
+        { "TT", "Trinidad and Tobago" }, { "TN", "Tunisia" }, { "TR", "Turkey" }, { "TM", "Turkmenistan" }, { "TC", "Turks and Caicos Islands" },
+        { "TV", "Tuvalu" }, { "UG", "Uganda" }, { "UA", "Ukraine" }, { "AE", "United Arab Emirates" }, { "GB", "United Kingdom" },
+        { "US", "United States of America" }, { "UM", "United States Minor Outlying Islands" }, { "UY", "Uruguay" }, { "UZ", "Uzbekistan" }, { "VU", "Vanuatu" },
+        { "VE", "Venezuela" }, { "VN", "Viet Nam" }, { "VG", "Virgin Islands (British)" }, { "VI", "Virgin Islands (U.S.)" }, { "WF", "Wallis and Futuna" },
+        { "EH", "Western Sahara" }, { "YE", "Yemen" }, { "ZM", "Zambia" }, { "ZW", "Zimbabwe" }
+    };
 }
 
 void GuiMenu::openWifiSettings(Window* win, std::string title, std::string data, const std::function<void(std::string)>& onsave)
@@ -5277,43 +5346,76 @@ void GuiMenu::openNetworkSettings(bool selectWifiEnable)
 #endif
 
 	// Wifi enable
-	auto enable_wifi = std::make_shared<SwitchComponent>(mWindow);	
+	auto enable_wifi = std::make_shared<SwitchComponent>(mWindow);
 	enable_wifi->setState(baseWifiEnabled);
 	s->addWithLabel(_("ENABLE WIFI"), enable_wifi, selectWifiEnable);
 
 	// window, title, settingstring,
 	const std::string baseSSID = SystemConf::getInstance()->get("wifi.ssid");
 	const std::string baseKEY = SystemConf::getInstance()->get("wifi.key");
+#if !WIN32
+	const std::string baseCountry = SystemConf::getInstance()->get("wifi.country");
+#endif
 
 	if (baseWifiEnabled)
 	{
 		s->addInputTextRow(_("WIFI SSID"), "wifi.ssid", false, false, &openWifiSettings);
 		s->addInputTextRow(_("WIFI KEY"), "wifi.key", true);
+
+#if !WIN32
+        // Batocera-specific WIFI COUNTRY option
+        auto country_codes = getCountryCodes();
+        auto country = std::make_shared<OptionListComponent<std::string>>(mWindow, _("WIFI COUNTRY"), false);
+
+        for (auto it = country_codes.cbegin(); it != country_codes.cend(); ++it)
+            country->add(it->second, it->first, baseCountry == it->first);
+
+        if (country->getSelectedObjects().size() == 0)
+            country->add("N/A", "", true);
+
+        s->addWithLabel(_("WIFI COUNTRY"), country);
+        s->addSaveFunc([country] { SystemConf::getInstance()->set("wifi.country", country->getSelected()); });
+#endif
 	}
-	
-	s->addSaveFunc([baseWifiEnabled, baseSSID, baseKEY, enable_wifi, window]
+
+	s->addSaveFunc([baseWifiEnabled, baseSSID, baseKEY,
+#if !WIN32
+	baseCountry,
+#endif
+	enable_wifi, window]
 	{
 		bool wifienabled = enable_wifi->getState();
 
 		SystemConf::getInstance()->setBool("wifi.enabled", wifienabled);
 
-		if (wifienabled) 
+		if (wifienabled)
 		{
 			std::string newSSID = SystemConf::getInstance()->get("wifi.ssid");
 			std::string newKey = SystemConf::getInstance()->get("wifi.key");
+#if !WIN32
+			std::string newCountry = SystemConf::getInstance()->get("wifi.country");
 
-			if (baseSSID != newSSID || baseKEY != newKey || !baseWifiEnabled)
+			if (baseSSID != newSSID || baseKEY != newKey || baseCountry != newCountry || !baseWifiEnabled)
 			{
-				if (ApiSystem::getInstance()->enableWifi(newSSID, newKey)) 
+				if (ApiSystem::getInstance()->enableWifi(newSSID, newKey, newCountry))
 					window->pushGui(new GuiMsgBox(window, _("WIFI ENABLED")));
-				else 
+				else
 					window->pushGui(new GuiMsgBox(window, _("WIFI CONFIGURATION ERROR")));
 			}
+#else
+			if (baseSSID != newSSID || baseKEY != newKey || !baseWifiEnabled)
+			{
+				if (ApiSystem::getInstance()->enableWifi(newSSID, newKey))
+					window->pushGui(new GuiMsgBox(window, _("WIFI ENABLED")));
+				else
+					window->pushGui(new GuiMsgBox(window, _("WIFI CONFIGURATION ERROR")));
+			}
+#endif
 		}
 		else if (baseWifiEnabled)
 			ApiSystem::getInstance()->disableWifi();
 	});
-	
+
 
 	enable_wifi->setOnChangedCallback([this, s, baseWifiEnabled, enable_wifi]()
 	{
@@ -5323,7 +5425,14 @@ void GuiMenu::openNetworkSettings(bool selectWifiEnable)
 			SystemConf::getInstance()->setBool("wifi.enabled", wifienabled);
 
 			if (wifienabled)
+			{
+#if !WIN32
+				std::string country = SystemConf::getInstance()->get("wifi.country");
+				ApiSystem::getInstance()->enableWifi(SystemConf::getInstance()->get("wifi.ssid"), SystemConf::getInstance()->get("wifi.key"), country);
+#else
 				ApiSystem::getInstance()->enableWifi(SystemConf::getInstance()->get("wifi.ssid"), SystemConf::getInstance()->get("wifi.key"));
+#endif
+			}
 			else
 				ApiSystem::getInstance()->disableWifi();
 
@@ -5553,6 +5662,7 @@ void GuiMenu::openQuitMenu_static(Window *window, bool quickAccessMenu, bool ani
 			_("YES"), [] { Utils::Platform::quitES(Utils::Platform::QuitMode::SHUTDOWN); },
 			_("NO"), nullptr));
 	}, "iconShutdown");
+
 #ifndef _ENABLEEMUELEC
 	s->addWithDescription(_("FAST SHUTDOWN SYSTEM"),_("Shutdown without saving metadata."), nullptr, [window] {
 		window->pushGui(new GuiMsgBox(window, _("REALLY SHUTDOWN WITHOUT SAVING METADATA?"), 
@@ -6224,9 +6334,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			GuiMenu::deleteBtnJoyCfg(mWindow, systemConfiguration, prefixName);
 		}();
 	}
-#endif
 
-#ifdef _ENABLEEMUELEC
  // PR - HLE BIOS.
 
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::hlebios))
@@ -6489,6 +6597,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 #endif		
 		}
 	}	
+
 #endif
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::latency_reduction))	
 		systemConfiguration->addEntry(_("LATENCY REDUCTION"), true, [mWindow, configName] { openLatencyReductionConfiguration(mWindow, configName); });
@@ -6639,6 +6748,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 		int n_all_gambate_gc_colors_modes = 126;
 		for (int i = 0; i < n_all_gambate_gc_colors_modes; i++)
 			colorizations_choices->add(all_gambate_gc_colors_modes[i], all_gambate_gc_colors_modes[i], currentColorization == std::string(all_gambate_gc_colors_modes[i]));
+		
 #ifdef _ENABLEEMUELEC
         if (CustomFeatures::FeaturesLoaded || (!CustomFeatures::FeaturesLoaded && (systemData->getName() == "gb" || systemData->getName() == "gbc" || systemData->getName() == "gb2players" || systemData->getName() == "gbc2players" || systemData->getName() == "gbh" || systemData->getName() == "gbch"))) // only for gb, gbc and gb2players gbh gbch
 #else
@@ -6649,6 +6759,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addSaveFunc([colorizations_choices, configName] { SystemConf::getInstance()->set(configName + "-renderer.colorization", colorizations_choices->getSelected()); });
 		}		
 	}
+
 #ifndef _ENABLEEMUELEC
 	// ps2 full boot
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::fullboot))
@@ -6711,6 +6822,7 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 			systemConfiguration->addSaveFunc([internalresolution, configName] { SystemConf::getInstance()->set(configName + ".internalresolution", internalresolution->getSelected()); });
 		}
 	}
+
 #endif
 	// Load per-game / per-emulator / per-system custom features
 	addFeatures(customFeatures, mWindow, systemConfiguration, configName, systemData->getName(), currentEmulator.empty() ? systemData->getEmulator(true) : currentEmulator, currentCore.empty() ? systemData->getCore(true) : currentCore, _("SETTINGS"), true);
@@ -6824,7 +6936,6 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 #endif
 
 	mWindow->pushGui(systemConfiguration);
-
 }
 
 std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createRatioOptionList(Window *window, std::string configname)

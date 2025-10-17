@@ -669,13 +669,20 @@ void GuiMenu::openEmuELECSettings()
 
 	auto splashLoadingOptionList = createSplashLoadingOptionList(mWindow);
 	s->addWithLabel(_("SPLASH LOADING OPTION"), splashLoadingOptionList);
+	splashLoadingOptionList->setSelectedChangedCallback([=](std::string name)
+	{
+		SystemConf::getInstance()->set("ee_splashloading", name);
+	});
+
+	if (SystemConf::getInstance()->get("ee_splashloading") == "1") {
+		// File picker for custom splash image
+		s->addFileBrowser(_("SET CUSTOM SPLASH LOADING MEDIA"), "ee_customsplash", (GuiFileBrowser::FileTypes) (GuiFileBrowser::FileTypes::IMAGES | GuiFileBrowser::FileTypes::VIDEO));
+	}
 
 	auto splashLoadingPlatformRoms = std::make_shared<SwitchComponent>(mWindow);
 	splashLoadingPlatformRoms->setState(SystemConf::getInstance()->get("ee_splash_loading_platform_roms") != "0");
 	s->addWithLabel(_("SPLASH LOAD PLATFORMS AND ROMS"), splashLoadingPlatformRoms);
 
-	// File picker for custom splash image
-	s->addFileBrowser(_("SET CUSTOM SPLASH LOADING MEDIA"), "ee_customsplash", (GuiFileBrowser::FileTypes) (GuiFileBrowser::FileTypes::IMAGES | GuiFileBrowser::FileTypes::VIDEO));
 
 	auto splashLoadingTime = std::make_shared<SliderComponent>(mWindow, 0.f, 100.f, 1.f, "seconds");
 

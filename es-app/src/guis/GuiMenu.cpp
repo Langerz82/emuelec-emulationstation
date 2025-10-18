@@ -349,7 +349,7 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createSplashLoadingOp
 {
 	auto emuelec_splash_loading_mode = std::make_shared< OptionListComponent<std::string> >(window, _("LOADING SPLASH OPTION"), false);
 	std::vector<std::string> splashmode;
-	splashmode.push_back(_("SHOW STANDARD SPLASH")); // 0
+	splashmode.push_back(_("SHOW DEFAULT SPLASH")); // 0
 	splashmode.push_back(_("SHOW CUSTOM SPLASH")); // 1
 	splashmode.push_back(_("SHOW RANDOM SPLASH")); // 2
 	splashmode.push_back(_("USE SCRAPPED MEDIA")); // 3
@@ -372,7 +372,7 @@ std::shared_ptr<OptionListComponent<std::string>> GuiMenu::createSplashExitOptio
 {
 	auto emuelec_splash_exit_mode = std::make_shared< OptionListComponent<std::string> >(window, _("EXIT SPLASH OPTION"), false);
 	std::vector<std::string> splashmode;
-	splashmode.push_back(_("SHOW STANDARD SPLASH")); // 0
+	splashmode.push_back(_("SHOW DEFAULT SPLASH")); // 0
 	splashmode.push_back(_("PLAY CUSTOM SPLASH")); // 1
 
 	std::string str_index = SystemConf::getInstance()->get("ee_splashexit");

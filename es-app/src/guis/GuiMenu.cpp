@@ -794,6 +794,9 @@ void GuiMenu::createConfigureSplash(Window* mWindow, int menuIndex)
 	s->addWithLabel(_("SPLASH EXIT DURATION"), splashExitTime);
 
 	s->addSaveFunc([=] {
+		if (splashLoadingOptionList->getSelected() == "2") {
+			mWindow->displayNotificationMessage(_U("\uF011  ") + _("PUT RANDOM MEDIA IN '/storage/roms/splash/random'."));
+		}
 		SystemConf::getInstance()->set("ee_splashloading", splashLoadingOptionList->getSelected());
 		SystemConf::getInstance()->set("ee_splashexit", splashExitOptionList->getSelected());
 

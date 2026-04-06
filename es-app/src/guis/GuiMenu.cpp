@@ -6857,9 +6857,10 @@ void GuiMenu::popSpecificConfigurationGui(Window* mWindow, std::string title, st
 #endif
 
 #ifdef _ENABLEEMUELEC
-	hello;
+	LOG(LogInfo) << "midi - isFeatureSupported: " << currentEmulator << " " << currentCore;
 	if (systemData->isFeatureSupported(currentEmulator, currentCore, EmulatorFeatures::midi))
 	{
+		LOG(LogInfo) << "midi - true";
 		auto ra_midi_def = std::make_shared< OptionListComponent<std::string> >(mWindow, "RETROARCH MIDI", false);
 
 		std::vector<std::string> midi_output;

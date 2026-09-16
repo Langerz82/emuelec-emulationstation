@@ -205,6 +205,23 @@ GuiInputConfig::GuiInputConfig(Window* window, InputConfig* target, bool reconfi
 			if(config != mTargetConfig)
 				return false;
 
+			// a "hold to skip" may have just fired for this exact physical input
+			// while it was still held down. swallow any further events for it
+			// (repeats and the eventual release) so it can't be reinterpreted
+			// as a fresh press for whatever row we've since moved on to.
+#ifdef _ENABLEEMUELEC
+			if(mIgnoringSkippedInput &&
+				mSkippedInput.device == input.device &&
+				mSkippedInput.id == input.id &&
+				mSkippedInput.type == input.type)
+			{
+				if(input.value == 0)
+					mIgnoringSkippedInput = false; // it's finally been released, stop ignoring it
+
+				return true;
+			}
+#endif
+
 			// if we're not configuring, start configuring when A is pressed
 			if(!mConfiguringRow)
 			{
@@ -249,6 +266,11 @@ GuiInputConfig::GuiInputConfig(Window* window, InputConfig* target, bool reconfi
 				// make sure we were holding something and we let go of what we were previously holding
 				if(!mHoldingInput || mHeldInput.device != input.device || mHeldInput.id != input.id || mHeldInput.type != input.type)
 					return true;
+#ifdef _ENABLEEMUELEC
+				// also make sure the release belongs to the row that actually started the hold
+				if(mHeldInputId != i)
+					return true;
+#endif
 
 				mHoldingInput = false;
 
@@ -379,8 +401,21 @@ void GuiInputConfig::update(int deltaTime)
 		{
 			setNotDefined(mMappings.at(mHeldInputId));
 			clearAssignment(mHeldInputId);
+
+#ifdef _ENABLEEMUELEC
+			// remember the physical input that caused the skip and ignore it
+			// until it's actually released (see the input_handler above) --
+			// it's still physically held down right now.
+			mSkippedInput = mHeldInput;
+			mIgnoringSkippedInput = true;
+
+			mHoldingInput = false;
+			mAllInputs.clear();
+			rowDone();
+#else
 			mHoldingInput = false;
 			rowDone();
+#endif
 		}else{
 			if(prevSec != curSec)
 			{

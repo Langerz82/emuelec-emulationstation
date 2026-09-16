@@ -261,9 +261,15 @@ GuiInputConfig::GuiInputConfig(Window* window, InputConfig* target, bool reconfi
 				if(!mHoldingInput || mHeldInput.device != input.device || mHeldInput.id != input.id || mHeldInput.type != input.type)
 					return true;
 
+#ifdef _ENABLEEMUELEC
+				// also make sure the release belongs to the row that actually started the hold
+				if(mHeldInputId != i)
+					return true;
+#endif
+
 				mHoldingInput = false;
 
-#ifdef _ENABLEEMUELEC
+#ifdef __ENABLEEMUELEC
 				// if we already held this long enough to count as a "hold to skip" and this row
 				// allows skipping, treat the release as a skip instead of assigning the held input
 				if (mHeldTime >= HOLD_TO_SKIP_MS && GUI_INPUT_CONFIG_LIST[i].skippable)

@@ -3,7 +3,9 @@
 
 #include <string>
 #include <map>
+#ifdef _ENABLEEMUELEC
 #include <ctime>
+#endif
 #include "Window.h"
 #include "components/BusyComponent.h"
 #include "resources/TextureData.h"

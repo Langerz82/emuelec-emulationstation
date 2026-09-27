@@ -597,7 +597,7 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			mMenu.addEntry(_("EDIT THIS GAME'S METADATA"), false, std::bind(&GuiGameOptions::openMetaDataEd, this));
 	}
 	else if (game->hasKeyboardMapping())
-	{
+	{ 
 		mMenu.addEntry(_("VIEW PAD TO KEYBOARD INFORMATION"), false, [this, game]
 		{
 			GuiMenu::editKeyboardMappings(mWindow, game, false);

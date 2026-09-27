@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <ctime>
 #include "Window.h"
 #include "components/BusyComponent.h"
 #include "resources/TextureData.h"
@@ -303,7 +304,78 @@ public:
 	virtual void restartBackglass();
 
 #ifdef _ENABLEEMUELEC
-  virtual std::vector<std::string> getChildFolders(std::string path);
+  // Every folder under 'path', however many directory levels down - not
+  // just its direct children. 'path' can be the system's own root ROM
+  // folder (as opposed to some subfolder a user created inside it), to get
+  // its whole tree, or any folder inside that tree, to get just what's
+  // under that one - either way this is served out of 'systemRootPath's
+  // own cached folder tree (see the .cpp): the first call for a given
+  // system scans its ROM folder with "find" - a real cost on slow storage
+  // (an SD card, a network share) - and writes what it found to a
+  // "folders.xml" file right in 'systemRootPath', so most calls after that
+  // just read that file back instead of re-scanning. The one exception is
+  // when that cache has actually fallen out of sync with what's really on
+  // disk - a folder added, renamed, or removed by hand outside
+  // EmulationStation entirely (over SSH/SFTP, from a USB stick, etc.), not
+  // through this file's own CREATE/MOVE/RENAME/REMOVE actions (those keep
+  // the cache in sync themselves as they happen - see addFolderToCache()
+  // and friends below) - which a quick mtime check (see
+  // isFolderTreeStale() in the .cpp) catches on every call, and pays for
+  // one fresh "find" scan to catch back up. Only the reserved names right
+  // under 'systemRootPath' itself (media/medias, images, manuals, videos,
+  // assets, artwork, downloaded_*, anything hidden - see the .cpp) are
+  // ever left out of the cached tree, since those only ever sit alongside
+  // the ROMs at that top level, never as - or inside - a folder the user
+  // made further down to organize games.
+  virtual std::vector<std::string> getChildFolders(std::string path, std::string systemRootPath);
+
+  // Adds 'newFolderPath' to 'systemRootPath's own cached "folders.xml"
+  // (see getChildFolders() above), and refreshes whichever mtime its own
+  // parent folder now has (the system ROM root's own, if that's what it
+  // is) to match - called from GuiFolderOptions::createFolder() right
+  // after it creates the directory on disk, so a MOVE TO FOLDER / CREATE
+  // FOLDER / REMOVE FOLDER opened right after still finds it without
+  // paying for a fresh "find" scan of the whole system just to pick up the
+  // one new folder, and getChildFolders()'s own staleness check right
+  // above doesn't mistake this in-app change for an outside one on its
+  // very next call. A no-op if 'systemRootPath' has no cached tree yet
+  // (nothing to keep in sync) - getChildFolders() builds one, already
+  // reflecting this folder straight off disk, the first time it's
+  // actually asked for.
+  void addFolderToCache(std::string systemRootPath, std::string newFolderPath);
+
+  // Rewrites every cached entry equal to, or nested under, 'oldPath' to
+  // sit under 'newPath' instead, and refreshes whichever mtime(s) oldPath's
+  // old parent and newPath's new one now have (same reasoning
+  // addFolderToCache() above gives - either can be the system ROM root
+  // itself) - called from GuiFolderOptions.cpp's own MOVE TO FOLDER
+  // (moving a FOLDER, not a GAME) and RENAME FOLDER right after each
+  // moves/renames the directory on disk. Both are the same operation from
+  // the cache's point of view: a subtree's own root path changes, and
+  // everything cached under it moves with it. Same no-op case as
+  // addFolderToCache() above when there's no cached tree yet.
+  void moveFolderInCache(std::string systemRootPath, std::string oldPath, std::string newPath);
+
+  // Drops 'removedPath', and everything cached under it, from
+  // 'systemRootPath's own cached tree, and refreshes whichever mtime its
+  // own (former) parent folder now has (same reasoning addFolderToCache()
+  // above gives) - called from GuiFolderOptions::confirmAndRemove() right
+  // after its "rm -rf" removes the directory (and everything inside it)
+  // from disk. Same no-op case as addFolderToCache() above when there's no
+  // cached tree yet.
+  void removeFolderFromCache(std::string systemRootPath, std::string removedPath);
+
+  // Forces a fresh "find" scan of 'systemRootPath's whole folder tree and
+  // rewrites its folders.xml from that, unconditionally - the on-demand
+  // counterpart to getChildFolders()'s own automatic staleness check
+  // above, for anyone who's just made a change outside this app entirely
+  // (over SSH/SFTP, from a USB stick, etc.) and doesn't want to wait for,
+  // or isn't sure will actually catch, that automatic check before the
+  // next MOVE TO FOLDER. Called from GuiFolderOptions' own "RESCAN
+  // FOLDERS" action. Unlike the other three above, this never no-ops -
+  // it scans and (re)writes folders.xml regardless of whether one already
+  // existed, same as getChildFolders() itself does the very first time.
+  void rescanFolderTree(std::string systemRootPath);
 #endif
 
 protected:
@@ -317,6 +389,74 @@ protected:
 		
 	virtual std::string getUpdateUrl();
 	virtual std::string getThemesUrl();
+
+#ifdef _ENABLEEMUELEC
+	// One cached folder's own path, and the mtime it actually had on disk
+	// the moment this was last written to folders.xml (see
+	// getChildFolders() above). isFolderTreeStale() below compares that
+	// against the real filesystem on every call, and addFolderToCache() /
+	// moveFolderInCache() / removeFolderFromCache() each refresh it (or the
+	// system ROM root's own separate mtime, tracked alongside the whole
+	// list rather than as one of its entries) right after their own change
+	// - so a normal in-app CREATE/MOVE/RENAME/REMOVE never looks like an
+	// outside edit to the very next lookup.
+	struct FolderCacheEntry
+	{
+		std::string path;
+		time_t mtime;
+	};
+
+	// The actual "find"-based scan getChildFolders() only ever has to run
+	// once per system, the very first time folders.xml (see getChildFolders()
+	// above) doesn't exist yet for it, or isFolderTreeStale() below finds
+	// its cached tree no longer matches what's actually on disk.
+	std::vector<std::string> scanSystemFolderTree(const std::string& systemRootPath);
+
+	// Reads a system's cached folder tree back from its folders.xml, along
+	// with 'rootMtime' - the system ROM root's own mtime at the moment this
+	// was last written. Sets 'ok' to whether the file actually parsed - a
+	// genuinely empty list (a system with no subfolders at all) is a valid,
+	// ok=true result that getChildFolders() should trust as-is (once also
+	// checked for staleness - see isFolderTreeStale() below), not treat as
+	// "never cached" and re-scan; ok=false is only for a missing or
+	// corrupted file, which it does re-scan.
+	std::vector<FolderCacheEntry> readSystemFolderTree(const std::string& xmlPath, time_t& rootMtime, bool& ok);
+
+	// Writes 'folders' - and 'rootMtime', the system ROM root's own mtime
+	// right now - out to 'xmlPath' as getChildFolders()'s cache for the
+	// system rooted where that path lives.
+	void writeSystemFolderTree(const std::string& xmlPath, const std::vector<FolderCacheEntry>& folders, time_t rootMtime);
+
+	// True if anything under 'systemRootPath' has actually changed since
+	// 'master' and 'rootMtime' were written to folders.xml by something
+	// other than this file's own CREATE/MOVE/RENAME/REMOVE actions (those
+	// keep both in sync themselves as they happen, so they never trip this
+	// - see addFolderToCache() and friends above) - most likely a folder
+	// added, renamed, or removed by hand outside EmulationStation entirely,
+	// e.g. over SSH/SFTP or from a USB stick. Checks 'systemRootPath's own
+	// current mtime against 'rootMtime' first (catches anything added or
+	// removed directly under it), then every entry in 'master' - that it
+	// still exists at all, and that its own current mtime still matches
+	// what's stored (catches the same two things happening anywhere deeper
+	// in the tree, a folder having been removed outright, or one of its own
+	// children changing in a way that would reveal a new folder underneath
+	// it) - stopping at the first mismatch found either way, since any one
+	// is already reason enough for getChildFolders() to fall back to a
+	// fresh "find" scan rather than trust a tree that's fallen out of sync
+	// with what's actually on disk.
+	bool isFolderTreeStale(const std::string& systemRootPath, time_t rootMtime, const std::vector<FolderCacheEntry>& master);
+
+	// Actually performs the rescan-and-write getChildFolders() above falls
+	// back to whenever its cached tree is missing, corrupted, or stale (see
+	// isFolderTreeStale() above), and rescanFolderTree() above runs
+	// unconditionally on demand: scans 'systemRootPath' fresh with
+	// scanSystemFolderTree(), records each result's own current mtime (and
+	// the root's), writes that out to 'xmlPath' as the new cache, and hands
+	// back the same list so a caller that already has it in hand (as
+	// getChildFolders() does) doesn't have to turn around and read back
+	// what it just wrote.
+	std::vector<FolderCacheEntry> rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath);
+#endif
 
     static ApiSystem* instance;
 

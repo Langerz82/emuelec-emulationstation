@@ -203,6 +203,14 @@ void SystemData::removeMultiDiskContent(std::unordered_map<std::string, FileData
 		}
 	}
 
+#ifdef _ENABLEEMUELEC
+	// An empty folder is still meant to show up in the gamelist when "Show
+	// Folders" is set to "always", so don't let this pass prune it away -
+	// it's the last thing this function does, so skipping it here is the
+	// same as skipping just this loop and nothing else.
+	if (getFolderViewMode() == "always")
+		return;
+#endif
 	// Remove empty folders
 	for (auto folder = folders.crbegin(); folder != folders.crend(); ++folder)
 	{
@@ -327,7 +335,17 @@ void SystemData::populateFolder(FolderData* folder, std::unordered_map<std::stri
 			populateFolder(newFolder, fileMap);
 
 			//ignore folders that do not contain games
+#ifdef _ENABLEEMUELEC
+			// ...unless "Show Folders" is set to "always", in which case an empty
+			// folder (one the user made to organize games into, or hasn't filled
+			// yet) should still end up in the tree so it can show up in the
+			// gamelist, rather than vanishing here before the folder-view-mode
+			// logic in getChildrenListToDisplay() ever gets a chance to decide
+			// whether to display it.
+			if(newFolder->getChildren().size() == 0 && getFolderViewMode() != "always")
+#else
 			if(newFolder->getChildren().size() == 0)
+#endif
 				delete newFolder;
 			else 
 			{

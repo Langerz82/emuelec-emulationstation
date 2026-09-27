@@ -557,15 +557,15 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			if (game->hasKeyboardMapping())
 			{
 				mMenu.addEntry(_("EDIT PADTOKEY PROFILE"), false, [this, game]
-				{
-					GuiMenu::editKeyboardMappings(mWindow, game, true);
+				{ 
+					GuiMenu::editKeyboardMappings(mWindow, game, true); 
 					close();
 				});
 			}
 			else if (game->isFeatureSupported(EmulatorFeatures::Features::padTokeyboard))
 			{
 				mMenu.addEntry(_("CREATE PADTOKEY PROFILE"), false, [this, game]
-				{
+				{ 
 					GuiMenu::editKeyboardMappings(mWindow, game, true);
 					close();
 				});
@@ -597,9 +597,9 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 			mMenu.addEntry(_("EDIT THIS GAME'S METADATA"), false, std::bind(&GuiGameOptions::openMetaDataEd, this));
 	}
 	else if (game->hasKeyboardMapping())
-	{ 
+	{
 		mMenu.addEntry(_("VIEW PAD TO KEYBOARD INFORMATION"), false, [this, game]
-		{
+		{ 
 			GuiMenu::editKeyboardMappings(mWindow, game, false);
 			close();
 		});

@@ -2494,6 +2494,63 @@ namespace
         work(i);
     }
   }
+
+  // Lists 'systemRootPath's own direct child folders, filtering out the same
+  // reserved names (media/medias, images, manuals, videos, assets, artwork,
+  // downloaded_* and anything hidden) scanSystemFolderTree() and
+  // topLevelFolderSetChanged() both used to filter after running this exact
+  // listing as a separate "find <root> -mindepth 1 -maxdepth 1 -type d
+  // -print" subprocess.
+  //
+  // That "find" turned out to be the actual multi-minute hang reported for
+  // MAME's ROM root - a directory holding tens of thousands of flat ROM
+  // files with no subfolders of their own. Logging confirmed the freeze sat
+  // right at that command, never returning. The device's "find" is BusyBox's,
+  // which - unlike GNU find - does not appear to trust "d_type" from
+  // readdir() to answer "-type d" and instead lstat()s every single entry to
+  // find out, turning "list the immediate children" into tens of thousands
+  // of blocking stat() calls on exactly the kind of slow storage (SD card,
+  // USB stick, SMB/NFS share) that makes each one expensive. Piping that many
+  // result lines back through executeEnumerationScript()'s popen()+fgets()
+  // loop only adds to it.
+  //
+  // SystemData::populateFolder() walks this identical MAME directory, with
+  // this identical reserved-name exclusion list, at every single ES boot
+  // with no reported slowness, because it never shells out to "find" at all
+  // - it calls Utils::FileSystem::getDirectoryFiles(), which opendir()s the
+  // folder once and reads each entry's type straight off dirent::d_type (a
+  // stat() is only paid for a symlink entry, to resolve what it points at).
+  // Reusing that same in-process listing here - instead of a second,
+  // subprocess-based walk of the same folder - is what actually fixes the
+  // hang, not just hides it behind a spinner.
+  std::vector<std::string> listTopLevelSubfolders(const std::string& systemRootPath)
+  {
+    StopWatch stopWatch("ApiSystem::listTopLevelSubfolders(" + systemRootPath + ") :", LogDebug);
+
+    std::vector<std::string> subRoots;
+
+    for (auto& fi : Utils::FileSystem::getDirectoryFiles(systemRootPath))
+    {
+      if (!fi.directory)
+        continue;
+
+      std::string name = Utils::String::toLower(Utils::FileSystem::getFileName(fi.path));
+
+      if (name.size() && name[0] == '.')
+        continue;
+
+      if (name == "media" || name == "medias" || name == "images" || name == "manuals" ||
+        name == "videos" || name == "assets" || name == "artwork" ||
+        Utils::String::startsWith(name, "downloaded_"))
+        continue;
+
+      subRoots.push_back(fi.path);
+    }
+
+    LOG(LogDebug) << "ApiSystem::listTopLevelSubfolders(" << systemRootPath << ") - " << subRoots.size() << " top-level folders found";
+
+    return subRoots;
+  }
 }
 
 std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& systemRootPath)
@@ -2517,32 +2574,17 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   // serial "find" process:
   //
   // Step 1: a fast, non-recursive listing of just 'systemRootPath's direct
-  // children - "-mindepth 1 -maxdepth 1" is safe to use directly here
-  // (unlike inside a "-prune" branch) because this command has no compound
-  // expression for those two to unexpectedly scope - and filter out the
-  // reserved names in C++, the same way the very first version of this
-  // function (before it became one "find" call) used to.
+  // children, via listTopLevelSubfolders() above - an in-process
+  // opendir()/readdir() walk (the same one SystemData::populateFolder()
+  // already relies on for this exact folder at every boot) rather than a
+  // "find -mindepth 1 -maxdepth 1 -type d" subprocess. That "find" is what
+  // was actually hanging for multiple minutes on MAME-sized flat ROM
+  // directories - see listTopLevelSubfolders()'s own comment for why.
   //
   // Diagnostic timing - temporary, see getChildFolders()'s own note above.
   StopWatch stopWatch("ApiSystem::scanSystemFolderTree(" + systemRootPath + ") total :", LogDebug);
 
-  std::string topCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d -print";
-
-  std::vector<std::string> subRoots;
-  for (auto& path : executeEnumerationScript(topCmd))
-  {
-    std::string name = Utils::String::toLower(Utils::FileSystem::getFileName(path));
-
-    if (name.size() && name[0] == '.')
-      continue;
-
-    if (name == "media" || name == "medias" || name == "images" || name == "manuals" ||
-      name == "videos" || name == "assets" || name == "artwork" ||
-      Utils::String::startsWith(name, "downloaded_"))
-      continue;
-
-    subRoots.push_back(path);
-  }
+  std::vector<std::string> subRoots = listTopLevelSubfolders(systemRootPath);
 
   if (subRoots.empty())
     return std::vector<std::string>();
@@ -2628,27 +2670,17 @@ bool ApiSystem::topLevelFolderSetChanged(const std::string& systemRootPath, cons
   StopWatch stopWatch("ApiSystem::topLevelFolderSetChanged(" + systemRootPath + ") :", LogDebug);
 
   // Same cheap, non-recursive top-level listing and reserved-name filter
-  // scanSystemFolderTree()'s own "step 1" uses - one process, no recursion -
-  // so isFolderTreeStale() below can afford to re-run this every time the
-  // ROM root's own mtime has moved, rather than treating that alone as
-  // reason enough to redo the whole (expensive) recursive rebuild.
-  std::string topCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d -print";
-
+  // scanSystemFolderTree()'s own "step 1" uses, via listTopLevelSubfolders()
+  // above - an in-process directory read, not a "find" subprocess, so
+  // isFolderTreeStale() below can afford to re-run this every time the ROM
+  // root's own mtime has moved, rather than treating that alone as reason
+  // enough to redo the whole (expensive) recursive rebuild. This used to
+  // shell out to "find" itself, which is what was actually hanging for
+  // minutes on MAME's flat ROM directory - see listTopLevelSubfolders()'s
+  // own comment for why.
   std::set<std::string> currentTopLevel;
-  for (auto& path : executeEnumerationScript(topCmd))
-  {
-    std::string name = Utils::String::toLower(Utils::FileSystem::getFileName(path));
-
-    if (name.size() && name[0] == '.')
-      continue;
-
-    if (name == "media" || name == "medias" || name == "images" || name == "manuals" ||
-      name == "videos" || name == "assets" || name == "artwork" ||
-      Utils::String::startsWith(name, "downloaded_"))
-      continue;
-
+  for (auto& path : listTopLevelSubfolders(systemRootPath))
     currentTopLevel.insert(path);
-  }
 
   std::set<std::string> cachedTopLevel;
   for (auto& entry : master)

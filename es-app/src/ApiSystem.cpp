@@ -2469,7 +2469,15 @@ namespace
     if (count == 0)
       return;
 
-    if (std::thread::hardware_concurrency() > 1)
+    // Diagnostic timing - temporary, see ApiSystem::getChildFolders()'s own
+    // note. Reports the core count runFanned() actually saw so a genuinely
+    // single/zero-core device (forced onto the serial fallback below, no
+    // parallelism at all) can be told apart from one that should be getting
+    // real concurrency here but for some other reason isn't.
+    unsigned cores = std::thread::hardware_concurrency();
+    StopWatch stopWatch("ApiSystem::runFanned(" + std::to_string(count) + " items, " + std::to_string(cores) + " cores reported) :", LogDebug);
+
+    if (cores > 1)
     {
       Utils::ThreadPool pool(1);
 
@@ -2480,6 +2488,8 @@ namespace
     }
     else
     {
+      LOG(LogDebug) << "ApiSystem::runFanned - falling back to serial (hardware_concurrency() <= 1)";
+
       for (size_t i = 0; i < count; i++)
         work(i);
     }
@@ -2512,6 +2522,10 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   // expression for those two to unexpectedly scope - and filter out the
   // reserved names in C++, the same way the very first version of this
   // function (before it became one "find" call) used to.
+  //
+  // Diagnostic timing - temporary, see getChildFolders()'s own note above.
+  StopWatch stopWatch("ApiSystem::scanSystemFolderTree(" + systemRootPath + ") total :", LogDebug);
+
   std::string topCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d -print";
 
   std::vector<std::string> subRoots;
@@ -2549,6 +2563,8 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   //
   // Each queued item writes into its own index of a vector sized up front,
   // so no locking is needed between them.
+  LOG(LogDebug) << "ApiSystem::scanSystemFolderTree(" << systemRootPath << ") - " << subRoots.size() << " top-level folders to recurse into";
+
   std::vector<std::vector<std::string>> perRootResults(subRoots.size());
 
   runFanned(subRoots.size(), [this, &perRootResults, &subRoots](size_t i)
@@ -2608,6 +2624,9 @@ void ApiSystem::writeSystemFolderTree(const std::string& xmlPath, const std::vec
 
 bool ApiSystem::topLevelFolderSetChanged(const std::string& systemRootPath, const std::vector<FolderCacheEntry>& master)
 {
+  // Diagnostic timing - temporary, see getChildFolders()'s own note above.
+  StopWatch stopWatch("ApiSystem::topLevelFolderSetChanged(" + systemRootPath + ") :", LogDebug);
+
   // Same cheap, non-recursive top-level listing and reserved-name filter
   // scanSystemFolderTree()'s own "step 1" uses - one process, no recursion -
   // so isFolderTreeStale() below can afford to re-run this every time the
@@ -2654,10 +2673,19 @@ bool ApiSystem::isFolderTreeStale(const std::string& systemRootPath, time_t root
   // two "move to folder" uses would cause. Confirm with
   // topLevelFolderSetChanged() above that a real top-level folder actually
   // appeared or disappeared before trusting that.
+  //
+  // Diagnostic timing - temporary, see getChildFolders()'s own note above.
+  StopWatch stopWatch("ApiSystem::isFolderTreeStale(" + systemRootPath + ", " + std::to_string(master.size()) + " entries) total :", LogDebug);
+
   if (Utils::FileSystem::getFileModificationDate(systemRootPath).getTime() != rootMtime)
   {
+    LOG(LogDebug) << "ApiSystem::isFolderTreeStale(" << systemRootPath << ") - root mtime changed, checking top-level set";
+
     if (topLevelFolderSetChanged(systemRootPath, master))
+    {
+      LOG(LogDebug) << "ApiSystem::isFolderTreeStale(" << systemRootPath << ") - top-level folder set actually changed - stale";
       return true;
+    }
   }
 
   // Same check, one level at a time, for every folder already known about:
@@ -2667,6 +2695,8 @@ bool ApiSystem::isFolderTreeStale(const std::string& systemRootPath, time_t root
   // runs on every getChildFolders() lookup now, not just the first one, so
   // it's fanned out with runFanned() above the same as everywhere else in
   // this cache rather than checked one entry at a time.
+  StopWatch perEntryStopWatch("ApiSystem::isFolderTreeStale(" + systemRootPath + ") - per-entry check of " + std::to_string(master.size()) + " folders :", LogDebug);
+
   std::atomic<bool> stale(false);
 
   runFanned(master.size(), [&master, &stale](size_t i)
@@ -2689,6 +2719,10 @@ std::vector<ApiSystem::FolderCacheEntry> ApiSystem::buildAndWriteFolderTree(cons
   // of slow ROM storage (SD card, USB stick, SMB/NFS share) this whole
   // cache exists to avoid re-paying on every lookup - so fan it out with
   // runFanned() above rather than walking the list one entry at a time.
+  //
+  // Diagnostic timing - temporary, see getChildFolders()'s own note above.
+  StopWatch stopWatch("ApiSystem::buildAndWriteFolderTree(" + systemRootPath + ", " + std::to_string(folderPaths.size()) + " folders) total :", LogDebug);
+
   std::vector<FolderCacheEntry> master(folderPaths.size());
 
   runFanned(folderPaths.size(), [&master, &folderPaths](size_t i)
@@ -2768,6 +2802,12 @@ std::vector<std::string> ApiSystem::getChildFolders(std::string path, std::strin
   // actually catches that case), rather than every time EmulationStation
   // happens to restart, or every time one of those four actions changes
   // something in it.
+  // Diagnostic timing - temporary, while tracking down where MOVE TO
+  // FOLDER's own delay is actually going. Enable debug logging (Settings ->
+  // Developer -> Enable debug logs, or "LogLevel" -> "debug" in
+  // es_settings.xml) to see these in es_log.txt.
+  StopWatch stopWatch("ApiSystem::getChildFolders(" + systemRootPath + ") total :", LogDebug);
+
   std::string xmlPath = systemRootPath + "/folders.xml";
 
   std::vector<FolderCacheEntry> master;
@@ -2777,8 +2817,14 @@ std::vector<std::string> ApiSystem::getChildFolders(std::string path, std::strin
   if (Utils::FileSystem::exists(xmlPath))
     master = readSystemFolderTree(xmlPath, rootMtime, haveCachedTree);
 
+  LOG(LogDebug) << "ApiSystem::getChildFolders(" << systemRootPath << ") - cache "
+    << (haveCachedTree ? "loaded, " + std::to_string(master.size()) + " entries" : "missing or unreadable");
+
   if (haveCachedTree && isFolderTreeStale(systemRootPath, rootMtime, master))
+  {
+    LOG(LogDebug) << "ApiSystem::getChildFolders(" << systemRootPath << ") - cache is stale, rebuilding";
     haveCachedTree = false;
+  }
 
   if (!haveCachedTree)
   {
@@ -2791,8 +2837,9 @@ std::vector<std::string> ApiSystem::getChildFolders(std::string path, std::strin
     // list here - written out and trusted as-is on every call after this
     // one, never mistaken for "not cached" the way an empty 'master'
     // alone would be.
-    LOG(LogDebug) << "ApiSystem::getChildFolders";
+    LOG(LogDebug) << "ApiSystem::getChildFolders(" << systemRootPath << ") - rebuilding from a live scan";
     master = rebuildFolderTree(systemRootPath, xmlPath);
+    LOG(LogDebug) << "ApiSystem::getChildFolders(" << systemRootPath << ") - rebuild found " << master.size() << " folders";
   }
 
   // Every caller from here down only ever wants the plain path list, same

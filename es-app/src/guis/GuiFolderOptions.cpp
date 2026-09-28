@@ -215,37 +215,37 @@ void GuiFolderOptions::moveToFolder(Window* window, FileData* file, std::functio
 
   std::string systemRootPath = sys->getStartPath();
 
-  // getChildFolders() only ever runs a live "find" scan the very first time
-  // it's asked about a system - every call after that just reads back what
-  // that first scan wrote to this same folders.xml (see its own comment in
-  // ApiSystem.cpp) - and that first scan is the one call here that can
+  // getChildFolders() reads folders.xml's cache back when it's already
+  // fresh, but falls back to a live "find" rebuild whenever that cache is
+  // missing, corrupted, or - per isFolderTreeStale() - has fallen out of
+  // sync with what's actually on disk (see both of their own comments in
+  // ApiSystem.cpp) - and that rebuild is the one case here that can
   // actually take a while (a slow SD card or network share, a large ROM
-  // tree). Checking for that file here too means this can tell the two
-  // cases apart and let the user know something's actually happening,
-  // rather than the menu just sitting there with no explanation until a
-  // cold scan finishes. showMoveToFolderPicker() below is everything this
-  // function used to do next, once 'folders' is actually in hand - split
-  // out purely so it can be handed either the instant result of the common,
-  // already-cached case, or the eventual result of the backgrounded
-  // first-time scan, without duplicating any of it.
-  if (!Utils::FileSystem::exists(systemRootPath + "/folders.xml"))
-  {
-    window->pushGui(new GuiLoading<std::vector<std::string>>(window,
-      Utils::String::format(_("BUILDING FOLDER DATA FOR %s FOR THE FIRST TIME...").c_str(), sys->getFullName().c_str()),
-      [gameDir, systemRootPath](auto /*gui*/)
-      {
-        return ApiSystem::getInstance()->getChildFolders(gameDir, systemRootPath);
-      },
-      [window, file, onMoved, gameDir, lastFolder](std::vector<std::string> folders)
-      {
-        showMoveToFolderPicker(window, file, onMoved, gameDir, lastFolder, folders);
-      }));
-
-    return;
-  }
-
-  std::vector<std::string> folders = ApiSystem::getInstance()->getChildFolders(gameDir, systemRootPath);
-  showMoveToFolderPicker(window, file, onMoved, gameDir, lastFolder, folders);
+  // tree). Whether THIS call is going to hit that slow path or the fast one
+  // isn't something this function can tell from out here any more: this
+  // used to only wrap the call in a background GuiLoading screen when
+  // folders.xml didn't exist yet at all, on the assumption that an existing
+  // file meant an already-fresh cache and a fast, safe-to-call-inline
+  // result - but a PRESENT, STALE cache takes exactly the same slow rebuild
+  // path as a missing one, with nothing visible from here to tell the two
+  // apart. Calling getChildFolders() directly, unwrapped, on the UI thread
+  // in that case is precisely what froze the menu for over a minute with no
+  // "BUILDING FOLDER DATA..." message and no explanation. Always run it
+  // through this same background wrapper instead, regardless of whether
+  // folders.xml exists yet - the common, already-cached-and-fresh case
+  // still resolves fast enough that GuiLoading's own busy animation barely
+  // has time to fade in, and a genuine rebuild now always gets to show it
+  // rather than ever locking up silently.
+  window->pushGui(new GuiLoading<std::vector<std::string>>(window,
+    Utils::String::format(_("BUILDING FOLDER DATA FOR %s...").c_str(), sys->getFullName().c_str()),
+    [gameDir, systemRootPath](auto /*gui*/)
+    {
+      return ApiSystem::getInstance()->getChildFolders(gameDir, systemRootPath);
+    },
+    [window, file, onMoved, gameDir, lastFolder](std::vector<std::string> folders)
+    {
+      showMoveToFolderPicker(window, file, onMoved, gameDir, lastFolder, folders);
+    }));
 }
 
 // static

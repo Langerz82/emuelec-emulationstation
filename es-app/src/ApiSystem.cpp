@@ -2608,32 +2608,26 @@ bool ApiSystem::isFolderTreeStale(const std::string& systemRootPath, time_t root
   return false;
 }
 
-std::vector<ApiSystem::FolderCacheEntry> ApiSystem::rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath)
+std::vector<ApiSystem::FolderCacheEntry> ApiSystem::buildAndWriteFolderTree(const std::string& systemRootPath, const std::string& xmlPath, const std::vector<std::string>& folderPaths)
 {
-  // scanSystemFolderTree() only hands back each found folder's path - it
-  // stays on plain, portable "find ... -print" (see that function's own
-  // comment for why) - so this is what actually fills in each
-  // FolderCacheEntry::mtime, one stat() per result. On a system's very
-  // first scan that can be just as many stat() calls as scanSystemFolderTree()
-  // itself made "find" processes for, each one its own blocking disk/network
-  // round trip on exactly the kind of slow ROM storage (SD card, USB stick,
-  // SMB/NFS share) this whole cache exists to avoid re-paying on every
-  // lookup - so fan it out across a thread pool the same way, rather than
-  // walking the list one entry at a time.
-  auto scanned = scanSystemFolderTree(systemRootPath);
+  // One stat() per folder to fill in its own FolderCacheEntry::mtime. On a
+  // big system that can be just as many stat() calls as there are folders,
+  // each one its own blocking disk/network round trip on exactly the kind
+  // of slow ROM storage (SD card, USB stick, SMB/NFS share) this whole
+  // cache exists to avoid re-paying on every lookup - so fan it out across
+  // a thread pool rather than walking the list one entry at a time.
+  std::vector<FolderCacheEntry> master(folderPaths.size());
 
-  std::vector<FolderCacheEntry> master(scanned.size());
-
-  if (scanned.size())
+  if (folderPaths.size())
   {
     Utils::ThreadPool pool(1);
 
-    for (size_t i = 0; i < scanned.size(); i++)
+    for (size_t i = 0; i < folderPaths.size(); i++)
     {
-      pool.queueWorkItem([&master, &scanned, i]
+      pool.queueWorkItem([&master, &folderPaths, i]
       {
-        master[i].path = scanned[i];
-        master[i].mtime = Utils::FileSystem::getFileModificationDate(scanned[i]).getTime();
+        master[i].path = folderPaths[i];
+        master[i].mtime = Utils::FileSystem::getFileModificationDate(folderPaths[i]).getTime();
       });
     }
 
@@ -2644,6 +2638,32 @@ std::vector<ApiSystem::FolderCacheEntry> ApiSystem::rebuildFolderTree(const std:
   writeSystemFolderTree(xmlPath, master, rootMtime);
 
   return master;
+}
+
+std::vector<ApiSystem::FolderCacheEntry> ApiSystem::rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath)
+{
+  // scanSystemFolderTree() only hands back each found folder's path - it
+  // stays on plain, portable "find ... -print" (see that function's own
+  // comment for why) - so buildAndWriteFolderTree() above is what actually
+  // fills in each FolderCacheEntry::mtime and writes the result out.
+  return buildAndWriteFolderTree(systemRootPath, xmlPath, scanSystemFolderTree(systemRootPath));
+}
+
+void ApiSystem::primeFolderTreeFromKnownFolders(std::string systemRootPath, const std::vector<std::string>& knownFolderPaths)
+{
+  // SystemData::SystemData() calls this right after populateFolder() walks
+  // a system's ROM tree in memory to build its FolderData children - the
+  // exact same folders (same reserved-name exclusions) scanSystemFolderTree()
+  // would otherwise have to rediscover itself later, by spawning "find" all
+  // over again, the first time the user opens MOVE TO FOLDER for this
+  // system. Handing that list straight to buildAndWriteFolderTree() here
+  // means folders.xml is already built - and already fresh, since it's
+  // sourced from the walk that just happened - by the time this system
+  // finishes loading, with no extra directory walk of its own: only the
+  // one stat() per folder that function still needs for its own mtime
+  // bookkeeping.
+  std::string xmlPath = systemRootPath + "/folders.xml";
+  buildAndWriteFolderTree(systemRootPath, xmlPath, knownFolderPaths);
 }
 
 std::vector<std::string> ApiSystem::getChildFolders(std::string path, std::string systemRootPath)

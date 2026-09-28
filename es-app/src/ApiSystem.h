@@ -398,6 +398,23 @@ public:
   // in sync), and also when 'folderPath' itself isn't a tracked entry
   // (nothing there to refresh).
   void refreshFolderMtime(std::string systemRootPath, std::string folderPath);
+
+  // Builds and writes this system's folders.xml cache from a folder list
+  // the caller already has in hand, rather than discovering it here with
+  // scanSystemFolderTree()'s own "find" calls. SystemData::SystemData()
+  // calls this right after populateFolder() walks a system's ROM tree in
+  // memory to build its FolderData children in the first place - the exact
+  // same folders (same reserved-name exclusions) scanSystemFolderTree()
+  // would otherwise have to rediscover itself the first time the user opens
+  // MOVE TO FOLDER for that system - so folders.xml ends up already built,
+  // and already fresh, by the time a system finishes loading, at the cost
+  // of only the one stat() per folder this still needs for its own mtime
+  // bookkeeping (fanned out across a thread pool, same as everywhere else
+  // in this cache). Always (re)writes folders.xml from 'knownFolderPaths'
+  // as given - since the caller just walked the real filesystem to produce
+  // it, there's nothing to gain by reading the old cache back first to
+  // compare against it.
+  void primeFolderTreeFromKnownFolders(std::string systemRootPath, const std::vector<std::string>& knownFolderPaths);
 #endif
 
 protected:
@@ -482,18 +499,28 @@ protected:
 	// with what's actually on disk.
 	bool isFolderTreeStale(const std::string& systemRootPath, time_t rootMtime, const std::vector<FolderCacheEntry>& master);
 
+	// Shared by rebuildFolderTree() below and the public
+	// primeFolderTreeFromKnownFolders() above: stats every path in
+	// 'folderPaths' to fill in its own FolderCacheEntry::mtime (fanned out
+	// across a thread pool - on a big system this can be just as much work
+	// as finding the folders in the first place), records 'systemRootPath's
+	// own current mtime alongside them, writes it all out to 'xmlPath' as
+	// the new cache, and hands back the same list so a caller that already
+	// has it in hand doesn't have to turn around and read back what it just
+	// wrote. Always writes - callers only ever reach this once they've
+	// already decided the cache needs rebuilding (or, for
+	// primeFolderTreeFromKnownFolders(), once they've already walked the
+	// real filesystem to produce 'folderPaths'), so there's nothing to gain
+	// by reading the old cache back first to compare against it.
+	std::vector<FolderCacheEntry> buildAndWriteFolderTree(const std::string& systemRootPath, const std::string& xmlPath, const std::vector<std::string>& folderPaths);
+
 	// Actually performs the rescan-and-write getChildFolders() above falls
 	// back to whenever its cached tree is missing, corrupted, or stale (see
 	// isFolderTreeStale() above), and rescanFolderTree() above runs
 	// unconditionally on demand: scans 'systemRootPath' fresh with
-	// scanSystemFolderTree(), stats each result (also fanned out across a
-	// thread pool - on a big first-time scan this is just as much work as
-	// the scan itself) to fill in its own FolderCacheEntry::mtime, records
-	// the root's own current mtime alongside them, writes it all out to
-	// 'xmlPath' as the new cache, and hands back the same list so a caller
-	// that already has it in hand (as
-	// getChildFolders() does) doesn't have to turn around and read back
-	// what it just wrote.
+	// scanSystemFolderTree(), then hands the result straight to
+	// buildAndWriteFolderTree() above to stat, record, and write out as
+	// 'xmlPath's new cache.
 	std::vector<FolderCacheEntry> rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath);
 #endif
 

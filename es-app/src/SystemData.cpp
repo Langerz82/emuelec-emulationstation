@@ -26,6 +26,10 @@
 #include "Paths.h"
 #include "SystemRandomPlaylist.h"
 
+#ifdef _ENABLEEMUELEC
+#include "ApiSystem.h"
+#endif
+
 #if WIN32
 #include "Win32ApiSystem.h"
 #endif
@@ -62,6 +66,27 @@ static std::map<std::string, std::function<BindableProperty(SystemData*)>> prope
 
 VectorEx<SystemData*> SystemData::sSystemVector;
 bool SystemData::IsManufacturerSupported = false;
+
+#ifdef _ENABLEEMUELEC
+// Walks a just-populated FolderData tree collecting every subfolder's own
+// path - not the root itself, matching ApiSystem::scanSystemFolderTree()'s
+// own "-mindepth 1" - so ApiSystem::primeFolderTreeFromKnownFolders() can
+// build this system's folders.xml straight from the walk populateFolder()
+// already did in SystemData::SystemData() below, rather than having
+// ApiSystem rediscover the same folders itself later with its own "find".
+static void collectFolderPathsForFolderCache(FolderData* folder, std::vector<std::string>& paths)
+{
+	for (auto child : folder->getChildren())
+	{
+		if (child->getType() != FOLDER)
+			continue;
+
+		FolderData* childFolder = (FolderData*)child;
+		paths.push_back(childFolder->getPath());
+		collectFolderPathsForFolderCache(childFolder, paths);
+	}
+}
+#endif
 
 SystemData::SystemData(const SystemMetadata& meta, SystemEnvironmentData* envData, std::vector<EmulatorData>* pEmulators, bool CollectionSystem, bool groupedSystem, bool withTheme, bool loadThemeOnlyIfElements) :
 	mMetadata(meta), mEnvData(envData), mIsCollectionSystem(CollectionSystem), mIsGameSystem(true)
@@ -106,6 +131,19 @@ SystemData::SystemData(const SystemMetadata& meta, SystemEnvironmentData* envDat
 				if (mHidden && !Settings::HiddenSystemsShowGames())
 					return;
 			}
+
+#ifdef _ENABLEEMUELEC
+			// populateFolder() just walked this system's whole ROM tree in
+			// memory to build mRootFolder's own FolderData children - hand
+			// that same list straight to ApiSystem so folders.xml is already
+			// built (and already fresh, since it's sourced from the walk
+			// that just happened) by the time this system finishes loading,
+			// instead of leaving it to be discovered from scratch, with its
+			// own "find" scan, the first time the user opens MOVE TO FOLDER.
+			std::vector<std::string> knownFolderPaths;
+			collectFolderPathsForFolderCache(mRootFolder, knownFolderPaths);
+			ApiSystem::getInstance()->primeFolderTreeFromKnownFolders(getStartPath(), knownFolderPaths);
+#endif
 		}
 
 		if (!Settings::IgnoreGamelist())

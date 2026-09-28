@@ -480,6 +480,20 @@ protected:
 	// system rooted where that path lives.
 	void writeSystemFolderTree(const std::string& xmlPath, const std::vector<FolderCacheEntry>& folders, time_t rootMtime);
 
+	// Used by isFolderTreeStale() below to make sense of 'systemRootPath's
+	// own mtime having changed: that mtime bumps for ANY direct child
+	// appearing or disappearing, including a reserved one (media, images,
+	// downloaded_*, etc) scanSystemFolderTree() already excludes from this
+	// cache entirely - most commonly a scraper creating "media"/"images" the
+	// first time it saves artwork for a game in this system, which has
+	// nothing to do with the folder list this cache actually tracks. Re-runs
+	// the same cheap, non-recursive top-level listing and reserved-name
+	// filter scanSystemFolderTree()'s own first step uses, and compares the
+	// surviving set against 'master's own top-level entries (those whose
+	// parent is 'systemRootPath' itself) - true only if a real, tracked
+	// top-level folder actually appeared or disappeared.
+	bool topLevelFolderSetChanged(const std::string& systemRootPath, const std::vector<FolderCacheEntry>& master);
+
 	// True if anything under 'systemRootPath' has actually changed since
 	// 'master' and 'rootMtime' were written to folders.xml by something
 	// other than this file's own CREATE/MOVE/RENAME/REMOVE actions (those
@@ -487,16 +501,22 @@ protected:
 	// - see addFolderToCache() and friends above) - most likely a folder
 	// added, renamed, or removed by hand outside EmulationStation entirely,
 	// e.g. over SSH/SFTP or from a USB stick. Checks 'systemRootPath's own
-	// current mtime against 'rootMtime' first (catches anything added or
-	// removed directly under it), then every entry in 'master' - that it
-	// still exists at all, and that its own current mtime still matches
-	// what's stored (catches the same two things happening anywhere deeper
-	// in the tree, a folder having been removed outright, or one of its own
-	// children changing in a way that would reveal a new folder underneath
-	// it) - stopping at the first mismatch found either way, since any one
-	// is already reason enough for getChildFolders() to fall back to a
-	// fresh "find" scan rather than trust a tree that's fallen out of sync
-	// with what's actually on disk.
+	// current mtime against 'rootMtime' first, and if that's moved on,
+	// confirms with topLevelFolderSetChanged() above that a real top-level
+	// folder is actually behind it rather than incidental churn (like a
+	// scraper creating "media" for the first time) before treating that
+	// alone as reason enough to rebuild - then checks every entry in
+	// 'master' (fanned out across a thread pool, same as everywhere else in
+	// this cache - this runs on every getChildFolders() lookup now, not just
+	// the first one, so it needs to stay cheap even on a system with a lot
+	// of folders) - that it still exists at all, and that its own current
+	// mtime still matches what's stored (catches the same two things
+	// happening anywhere deeper in the tree, a folder having been removed
+	// outright, or one of its own children changing in a way that would
+	// reveal a new folder underneath it) - any mismatch found either way is
+	// already reason enough for getChildFolders() to fall back to a fresh
+	// "find" scan rather than trust a tree that's fallen out of sync with
+	// what's actually on disk.
 	bool isFolderTreeStale(const std::string& systemRootPath, time_t rootMtime, const std::vector<FolderCacheEntry>& master);
 
 	// Shared by rebuildFolderTree() below and the public

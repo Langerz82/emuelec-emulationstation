@@ -24,6 +24,7 @@
 #include <fstream>
 #include <chrono>
 #include <thread>
+#include <set>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
@@ -2605,29 +2606,79 @@ void ApiSystem::writeSystemFolderTree(const std::string& xmlPath, const std::vec
     LOG(LogError) << "ApiSystem::writeSystemFolderTree - Error saving \"" << xmlPath << "\"!";
 }
 
+bool ApiSystem::topLevelFolderSetChanged(const std::string& systemRootPath, const std::vector<FolderCacheEntry>& master)
+{
+  // Same cheap, non-recursive top-level listing and reserved-name filter
+  // scanSystemFolderTree()'s own "step 1" uses - one process, no recursion -
+  // so isFolderTreeStale() below can afford to re-run this every time the
+  // ROM root's own mtime has moved, rather than treating that alone as
+  // reason enough to redo the whole (expensive) recursive rebuild.
+  std::string topCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d -print";
+
+  std::set<std::string> currentTopLevel;
+  for (auto& path : executeEnumerationScript(topCmd))
+  {
+    std::string name = Utils::String::toLower(Utils::FileSystem::getFileName(path));
+
+    if (name.size() && name[0] == '.')
+      continue;
+
+    if (name == "media" || name == "medias" || name == "images" || name == "manuals" ||
+      name == "videos" || name == "assets" || name == "artwork" ||
+      Utils::String::startsWith(name, "downloaded_"))
+      continue;
+
+    currentTopLevel.insert(path);
+  }
+
+  std::set<std::string> cachedTopLevel;
+  for (auto& entry : master)
+    if (Utils::FileSystem::getParent(entry.path) == systemRootPath)
+      cachedTopLevel.insert(entry.path);
+
+  return currentTopLevel != cachedTopLevel;
+}
+
 bool ApiSystem::isFolderTreeStale(const std::string& systemRootPath, time_t rootMtime, const std::vector<FolderCacheEntry>& master)
 {
-  // Anything added or removed right under the ROM root itself - including
-  // an entirely new top-level folder "find" has never seen before - always
-  // bumps the root's own mtime, so this alone already catches that case
-  // without needing an entry for the root in 'master' itself.
+  // The ROM root's own mtime bumps for ANY direct child appearing or
+  // disappearing - not just a real, tracked top-level folder, but also a
+  // reserved one (media, images, downloaded_*, etc) scanSystemFolderTree()
+  // already excludes from this cache entirely, most commonly a scraper
+  // creating "media"/"images" the first time it saves artwork for a game in
+  // this system. Treating that alone as "stale" used to mean throwing this
+  // whole cache away and paying for a full recursive rebuild the next time
+  // MOVE TO FOLDER was opened - silently, since folders.xml already existed
+  // so the "building for the first time" notice never fired either, which
+  // is exactly the kind of long, unexplained pause a scrape landing between
+  // two "move to folder" uses would cause. Confirm with
+  // topLevelFolderSetChanged() above that a real top-level folder actually
+  // appeared or disappeared before trusting that.
   if (Utils::FileSystem::getFileModificationDate(systemRootPath).getTime() != rootMtime)
-    return true;
+  {
+    if (topLevelFolderSetChanged(systemRootPath, master))
+      return true;
+  }
 
   // Same check, one level at a time, for every folder already known about:
   // gone entirely, or its own mtime has moved on from what was last
   // written - either way something changed inside it (a subfolder of ITS
-  // own added, renamed, or removed) since this cache was last trusted.
-  for (auto& entry : master)
+  // own added, renamed, or removed) since this cache was last trusted. This
+  // runs on every getChildFolders() lookup now, not just the first one, so
+  // it's fanned out with runFanned() above the same as everywhere else in
+  // this cache rather than checked one entry at a time.
+  std::atomic<bool> stale(false);
+
+  runFanned(master.size(), [&master, &stale](size_t i)
   {
-    if (!Utils::FileSystem::exists(entry.path))
-      return true;
+    auto& entry = master[i];
 
-    if (Utils::FileSystem::getFileModificationDate(entry.path).getTime() != entry.mtime)
-      return true;
-  }
+    if (!Utils::FileSystem::exists(entry.path) ||
+      Utils::FileSystem::getFileModificationDate(entry.path).getTime() != entry.mtime)
+      stale = true;
+  });
 
-  return false;
+  return stale.load();
 }
 
 std::vector<ApiSystem::FolderCacheEntry> ApiSystem::buildAndWriteFolderTree(const std::string& systemRootPath, const std::string& xmlPath, const std::vector<std::string>& folderPaths)

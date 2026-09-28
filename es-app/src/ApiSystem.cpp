@@ -2450,7 +2450,7 @@ bool ApiSystem::enableService(std::string name, bool enable)
 }
 
 #ifdef _ENABLEEMUELEC
-std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& systemRootPath)
+std::vector<ApiSystem::FolderCacheEntry> ApiSystem::scanSystemFolderTree(const std::string& systemRootPath)
 {
   // Same reserved-name list SystemData::populateFolder() already skips when
   // it scans a system's ROM folder to build the actual gamelist tree
@@ -2472,9 +2472,30 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   // they routinely hold thousands of scraped image/video files (one media
   // file per ROM is normal), which is where a scan actually gets slow if
   // it has to walk them first and only throw the results away by name
-  // afterwards. All of that in a single "find" call, rather than a first
-  // top-level-only pass followed by a batch of recursive ones.
-  std::string cmd = "find \"" + systemRootPath + "\" \\( "
+  // afterwards.
+  //
+  // Two more speedups layered onto this same single "find" call:
+  //
+  // "-noleaf" tells find not to rely on standard Unix directory hard-link
+  // counting to guess how many subdirectories are left to expect under a
+  // given folder (an optimization that lets it skip a stat() on some
+  // entries when that count checks out). EmuELEC ROM storage is routinely
+  // FAT32/exFAT (SD cards, USB sticks) or an SMB/NFS network share, none
+  // of which follow that convention - without "-noleaf" find would still
+  // assume it does, working against itself rather than skipping anything.
+  //
+  // "-printf" has find report each surviving folder's own mtime right
+  // alongside its path, both read off the very same stat() this already
+  // has to do per entry to confirm "-type d" - rebuildFolderTree() used to
+  // turn around and call getFileModificationDate() on every single path
+  // this returned, paying for a second stat() per folder on top of the one
+  // find had just paid for. "%T@" prints as seconds.nanoseconds (e.g.
+  // "1700000000.5192837465"); strtoll() below stops at the first non-digit
+  // character, so it reads the whole-seconds part straight back out
+  // without needing to parse the fractional part at all. Splitting each
+  // line on its first space is enough to pull the two apart even when the
+  // path itself contains one, since that particular format never does.
+  std::string cmd = "find \"" + systemRootPath + "\" -noleaf \\( "
     "-ipath \"" + systemRootPath + "/media\" -o "
     "-ipath \"" + systemRootPath + "/medias\" -o "
     "-ipath \"" + systemRootPath + "/images\" -o "
@@ -2484,9 +2505,23 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
     "-ipath \"" + systemRootPath + "/artwork\" -o "
     "-ipath \"" + systemRootPath + "/downloaded_*\" -o "
     "-ipath \"" + systemRootPath + "/.*\" "
-    "\\) -prune -o -mindepth 1 -type d -print";
+    "\\) -prune -o -mindepth 1 -type d -printf \"%T@ %p\\n\"";
 
-  return executeEnumerationScript(cmd);
+  std::vector<FolderCacheEntry> entries;
+
+  for (auto& line : executeEnumerationScript(cmd))
+  {
+    size_t sp = line.find(' ');
+    if (sp == std::string::npos)
+      continue;
+
+    FolderCacheEntry entry;
+    entry.mtime = (time_t)strtoll(line.substr(0, sp).c_str(), nullptr, 10);
+    entry.path = line.substr(sp + 1);
+    entries.push_back(entry);
+  }
+
+  return entries;
 }
 
 std::vector<ApiSystem::FolderCacheEntry> ApiSystem::readSystemFolderTree(const std::string& xmlPath, time_t& rootMtime, bool& ok)
@@ -2557,16 +2592,10 @@ bool ApiSystem::isFolderTreeStale(const std::string& systemRootPath, time_t root
 
 std::vector<ApiSystem::FolderCacheEntry> ApiSystem::rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath)
 {
-  auto scanned = scanSystemFolderTree(systemRootPath);
-
-  std::vector<FolderCacheEntry> master;
-  for (auto& folder : scanned)
-  {
-    FolderCacheEntry entry;
-    entry.path = folder;
-    entry.mtime = Utils::FileSystem::getFileModificationDate(folder).getTime();
-    master.push_back(entry);
-  }
+  // scanSystemFolderTree() now hands back each folder's own mtime
+  // alongside its path directly - both read off the same "find" pass -
+  // so there's no separate stat() loop to run here first.
+  std::vector<FolderCacheEntry> master = scanSystemFolderTree(systemRootPath);
 
   time_t rootMtime = Utils::FileSystem::getFileModificationDate(systemRootPath).getTime();
   writeSystemFolderTree(xmlPath, master, rootMtime);

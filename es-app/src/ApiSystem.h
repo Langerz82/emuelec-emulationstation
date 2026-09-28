@@ -431,8 +431,13 @@ protected:
 	// The actual "find"-based scan getChildFolders() only ever has to run
 	// once per system, the very first time folders.xml (see getChildFolders()
 	// above) doesn't exist yet for it, or isFolderTreeStale() below finds
-	// its cached tree no longer matches what's actually on disk.
-	std::vector<std::string> scanSystemFolderTree(const std::string& systemRootPath);
+	// its cached tree no longer matches what's actually on disk. Returns
+	// each found folder's own mtime right alongside its path (both come out
+	// of the same "find" pass, which already has to stat() each one to
+	// confirm "-type d"), so rebuildFolderTree() below never has to turn
+	// around and stat() every single result a second time just to fill in
+	// FolderCacheEntry::mtime.
+	std::vector<FolderCacheEntry> scanSystemFolderTree(const std::string& systemRootPath);
 
 	// Reads a system's cached folder tree back from its folders.xml, along
 	// with 'rootMtime' - the system ROM root's own mtime at the moment this
@@ -472,9 +477,10 @@ protected:
 	// back to whenever its cached tree is missing, corrupted, or stale (see
 	// isFolderTreeStale() above), and rescanFolderTree() above runs
 	// unconditionally on demand: scans 'systemRootPath' fresh with
-	// scanSystemFolderTree(), records each result's own current mtime (and
-	// the root's), writes that out to 'xmlPath' as the new cache, and hands
-	// back the same list so a caller that already has it in hand (as
+	// scanSystemFolderTree() (each result's own mtime comes back from that
+	// scan directly now), records the root's own current mtime alongside
+	// them, writes it all out to 'xmlPath' as the new cache, and hands back
+	// the same list so a caller that already has it in hand (as
 	// getChildFolders() does) doesn't have to turn around and read back
 	// what it just wrote.
 	std::vector<FolderCacheEntry> rebuildFolderTree(const std::string& systemRootPath, const std::string& xmlPath);

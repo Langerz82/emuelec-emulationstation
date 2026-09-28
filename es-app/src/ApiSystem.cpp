@@ -2452,69 +2452,41 @@ bool ApiSystem::enableService(std::string name, bool enable)
 #ifdef _ENABLEEMUELEC
 std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& systemRootPath)
 {
-  std::vector<std::string> paths;
-
   // Same reserved-name list SystemData::populateFolder() already skips when
   // it scans a system's ROM folder to build the actual gamelist tree
   // (media/medias, images, manuals, videos, assets, downloaded_* and
-  // artwork, plus anything hidden) - those only ever sit alongside the ROMs
-  // at the system's own root, never as a folder a user made further down to
-  // organize games, so they're only ever excluded here at 'systemRootPath's
-  // own direct-child level. They also routinely hold thousands of scraped
-  // image/video files - one media file per ROM is normal - which is where
-  // this actually gets slow: recursing a single "find" call into their
-  // contents (as this used to, then just throwing results away by name
-  // afterwards) still pays the cost of walking every one of those files
-  // first. Scanning the first level on its own with "-maxdepth 1" keeps
-  // that step cheap no matter how many files 'systemRootPath' itself has,
-  // and then only recursing into whatever's left over after excluding the
-  // reserved names means those files are never walked at all.
-  std::string topLevelCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d";
-  auto topLevel = executeEnumerationScript(topLevelCmd);
+  // artwork, plus anything hidden) - only ever excluded here at
+  // 'systemRootPath's own direct-child level, matched with "-ipath" against
+  // each reserved name's own full top-level path rather than with
+  // "-mindepth"/"-maxdepth": those two apply to find's ENTIRE traversal no
+  // matter where they appear in the expression - putting one inside this
+  // prune condition to scope it to depth 1 would silently cap the whole
+  // scan to depth 1 instead of just deciding what to prune. Matching on
+  // each name's own top-level path keeps the exclusion scoped to exactly
+  // that level, so a folder further down the tree that a user made to
+  // organize games can still legitimately share one of these names without
+  // being hidden from this picker.
+  //
+  // "-prune" then stops find from ever walking into a matched folder's own
+  // contents at all - the same reason these names were excluded before:
+  // they routinely hold thousands of scraped image/video files (one media
+  // file per ROM is normal), which is where a scan actually gets slow if
+  // it has to walk them first and only throw the results away by name
+  // afterwards. All of that in a single "find" call, rather than a first
+  // top-level-only pass followed by a batch of recursive ones.
+  std::string cmd = "find \"" + systemRootPath + "\" \\( "
+    "-ipath \"" + systemRootPath + "/media\" -o "
+    "-ipath \"" + systemRootPath + "/medias\" -o "
+    "-ipath \"" + systemRootPath + "/images\" -o "
+    "-ipath \"" + systemRootPath + "/manuals\" -o "
+    "-ipath \"" + systemRootPath + "/videos\" -o "
+    "-ipath \"" + systemRootPath + "/assets\" -o "
+    "-ipath \"" + systemRootPath + "/artwork\" -o "
+    "-ipath \"" + systemRootPath + "/downloaded_*\" -o "
+    "-ipath \"" + systemRootPath + "/.*\" "
+    "\\) -prune -o -mindepth 1 -type d -print";
 
-  std::vector<std::string> toRecurse;
-
-  for (auto folder : topLevel)
-  {
-    std::string fn = Utils::String::toLower(Utils::FileSystem::getFileName(folder));
-
-    if (fn == "media" || fn == "medias" || fn == "images" || fn == "manuals" ||
-      fn == "videos" || fn == "assets" || fn == "artwork" ||
-      Utils::String::startsWith(fn, "downloaded_") || Utils::String::startsWith(fn, "."))
-      continue;
-
-    paths.push_back(folder);
-    toRecurse.push_back(folder);
-  }
-
-  // Recurse into every non-reserved top-level folder with as few "find"
-  // processes as possible, rather than one popen() per folder: each
-  // popen() call forks a shell that then execs find, and with a ROM folder
-  // that has hundreds of top-level subfolders (arcade sets that keep every
-  // game in its own folder are a common case) that per-folder fork/exec
-  // overhead becomes the actual bottleneck, even though each individual
-  // find only ever walks a handful of files. find natively accepts more
-  // than one starting path in a single invocation, so a batch of folders
-  // is recursed together in one process; batching (rather than one command
-  // line listing every folder at once) just keeps each command comfortably
-  // under the shell's argument-length limit when there are thousands of
-  // them.
-  const size_t batchSize = 200;
-
-  for (size_t i = 0; i < toRecurse.size(); i += batchSize)
-  {
-    std::string cmd = "find";
-
-    for (size_t j = i; j < toRecurse.size() && j < i + batchSize; j++)
-      cmd += " \"" + toRecurse[j] + "\"";
-
-    cmd += " -mindepth 1 -type d";
-
-    auto nested = executeEnumerationScript(cmd);
-    paths.insert(paths.end(), nested.begin(), nested.end());
-  }
-
-  return paths;
+  return executeEnumerationScript(cmd);
 }
 
 std::vector<ApiSystem::FolderCacheEntry> ApiSystem::readSystemFolderTree(const std::string& xmlPath, time_t& rootMtime, bool& ok)

@@ -2450,6 +2450,41 @@ bool ApiSystem::enableService(std::string name, bool enable)
 }
 
 #ifdef _ENABLEEMUELEC
+namespace
+{
+  // Runs 'work(i)' once for each i in [0, count). Only actually spreads that
+  // across a Utils::ThreadPool (one thread per core) when this device
+  // reports more than one core - the same "hardWareCoreCount > 1" check
+  // ApiSystem::extractPdfImages() above already makes before parallelizing
+  // its own work, and for the same reason: std::thread::hardware_concurrency()
+  // can come back 0 (when it can't tell) or 1 on a single-core device, and a
+  // ThreadPool with zero worker threads for its queue to run on spins
+  // forever in wait() rather than actually finishing, while even a single
+  // worker there just means that thread and wait()'s own busy-wait loop
+  // fighting each other for the same one core, for no gain over doing the
+  // work directly, in order, right here.
+  void runFanned(size_t count, const std::function<void(size_t)>& work)
+  {
+    if (count == 0)
+      return;
+
+    if (std::thread::hardware_concurrency() > 1)
+    {
+      Utils::ThreadPool pool(1);
+
+      for (size_t i = 0; i < count; i++)
+        pool.queueWorkItem([&work, i] { work(i); });
+
+      pool.wait();
+    }
+    else
+    {
+      for (size_t i = 0; i < count; i++)
+        work(i);
+    }
+  }
+}
+
 std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& systemRootPath)
 {
   // Same reserved-name list SystemData::populateFolder() already skips when
@@ -2500,39 +2535,26 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   // Step 2: one plain recursive "find <subRoot> -type d -print" per
   // surviving top-level folder - no "-prune" needed here at all, since the
   // reserved-name exclusion only ever applied at the top level above, so
-  // everything under a kept folder is fair game - fanned out across a small
-  // pool of worker threads (Utils::ThreadPool, the same helper
-  // extractPdfImages() elsewhere in this file already uses to run several
-  // of its own external commands at once) so a ROM library with several
-  // top-level folders - one per organizational folder the user made, one
-  // per arcade compilation, etc - walks them all at the same time instead
-  // of one process working through the whole tree alone. This only ever
-  // runs on the very first scan for a system, or when isFolderTreeStale()
-  // below catches an outside change - every other lookup is served straight
-  // out of folders.xml - but that first scan is exactly the one that can
-  // take a while on a big library, so it's the one worth parallelizing.
+  // everything under a kept folder is fair game - fanned out with
+  // runFanned() above (falls back to running them one at a time in order on
+  // a single-core device) so a ROM library with several top-level folders -
+  // one per organizational folder the user made, one per arcade
+  // compilation, etc - walks them all at the same time instead of one
+  // process working through the whole tree alone. This only ever runs on
+  // the very first scan for a system, or when isFolderTreeStale() below
+  // catches an outside change - every other lookup is served straight out
+  // of folders.xml - but that first scan is exactly the one that can take a
+  // while on a big library, so it's the one worth parallelizing.
   //
   // Each queued item writes into its own index of a vector sized up front,
-  // so no locking is needed between them - the default single-thread-per-
-  // core count Utils::ThreadPool(1) already uses elsewhere is right here
-  // too: more "find" processes than cores just contend with each other for
-  // the same disk/network link without actually finishing any sooner.
+  // so no locking is needed between them.
   std::vector<std::vector<std::string>> perRootResults(subRoots.size());
 
+  runFanned(subRoots.size(), [this, &perRootResults, &subRoots](size_t i)
   {
-    Utils::ThreadPool pool(1);
-
-    for (size_t i = 0; i < subRoots.size(); i++)
-    {
-      pool.queueWorkItem([this, &perRootResults, &subRoots, i]
-      {
-        std::string cmd = "find \"" + subRoots[i] + "\" -type d -print";
-        perRootResults[i] = executeEnumerationScript(cmd);
-      });
-    }
-
-    pool.wait();
-  }
+    std::string cmd = "find \"" + subRoots[i] + "\" -type d -print";
+    perRootResults[i] = executeEnumerationScript(cmd);
+  });
 
   std::vector<std::string> result;
   for (auto& sub : perRootResults)
@@ -2614,25 +2636,15 @@ std::vector<ApiSystem::FolderCacheEntry> ApiSystem::buildAndWriteFolderTree(cons
   // big system that can be just as many stat() calls as there are folders,
   // each one its own blocking disk/network round trip on exactly the kind
   // of slow ROM storage (SD card, USB stick, SMB/NFS share) this whole
-  // cache exists to avoid re-paying on every lookup - so fan it out across
-  // a thread pool rather than walking the list one entry at a time.
+  // cache exists to avoid re-paying on every lookup - so fan it out with
+  // runFanned() above rather than walking the list one entry at a time.
   std::vector<FolderCacheEntry> master(folderPaths.size());
 
-  if (folderPaths.size())
+  runFanned(folderPaths.size(), [&master, &folderPaths](size_t i)
   {
-    Utils::ThreadPool pool(1);
-
-    for (size_t i = 0; i < folderPaths.size(); i++)
-    {
-      pool.queueWorkItem([&master, &folderPaths, i]
-      {
-        master[i].path = folderPaths[i];
-        master[i].mtime = Utils::FileSystem::getFileModificationDate(folderPaths[i]).getTime();
-      });
-    }
-
-    pool.wait();
-  }
+    master[i].path = folderPaths[i];
+    master[i].mtime = Utils::FileSystem::getFileModificationDate(folderPaths[i]).getTime();
+  });
 
   time_t rootMtime = Utils::FileSystem::getFileModificationDate(systemRootPath).getTime();
   writeSystemFolderTree(xmlPath, master, rootMtime);
@@ -2656,13 +2668,35 @@ void ApiSystem::primeFolderTreeFromKnownFolders(std::string systemRootPath, cons
   // exact same folders (same reserved-name exclusions) scanSystemFolderTree()
   // would otherwise have to rediscover itself later, by spawning "find" all
   // over again, the first time the user opens MOVE TO FOLDER for this
-  // system. Handing that list straight to buildAndWriteFolderTree() here
+  // system. Handing that list straight to buildAndWriteFolderTree() below
   // means folders.xml is already built - and already fresh, since it's
   // sourced from the walk that just happened - by the time this system
   // finishes loading, with no extra directory walk of its own: only the
   // one stat() per folder that function still needs for its own mtime
   // bookkeeping.
   std::string xmlPath = systemRootPath + "/folders.xml";
+
+  // But if folders.xml already exists from a previous run, check first
+  // whether anything it describes has actually changed - the exact same
+  // mtime check getChildFolders() below runs on every lookup - before
+  // paying to rebuild it. If nothing's stale, the cache already matches
+  // disk exactly, so rebuilding it here would only write back the same
+  // paths and mtimes it already holds: a stat() per folder and a flash
+  // write for every system, on every single boot, whether or not the user
+  // actually added, removed or moved anything since EmulationStation last
+  // ran. Skip straight past all of that in the common case where nothing
+  // changed, and only fall through to an actual rebuild when it did (or
+  // when there's no usable cache yet at all).
+  if (Utils::FileSystem::exists(xmlPath))
+  {
+    time_t rootMtime;
+    bool ok;
+    std::vector<FolderCacheEntry> master = readSystemFolderTree(xmlPath, rootMtime, ok);
+
+    if (ok && !isFolderTreeStale(systemRootPath, rootMtime, master))
+      return;
+  }
+
   buildAndWriteFolderTree(systemRootPath, xmlPath, knownFolderPaths);
 }
 

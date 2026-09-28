@@ -378,6 +378,26 @@ public:
   // it scans and (re)writes folders.xml regardless of whether one already
   // existed, same as getChildFolders() itself does the very first time.
   void rescanFolderTree(std::string systemRootPath);
+
+  // Refreshes 'folderPath's own stored mtime in this system's
+  // folders.xml cache (or the cache's separate root mtime, if
+  // 'folderPath' canonicalizes to the system's own ROM root) to match
+  // what's actually on disk right now, in place - without adding,
+  // removing or moving anything in the cached path list itself, unlike
+  // addFolderToCache() / moveFolderInCache() / removeFolderFromCache()
+  // above. Those three only ever run for a FOLDER changing hands, so a
+  // plain GAME move never touches the cache at all through them - but
+  // the move still changes its old folder's and its new folder's mtimes
+  // on disk (a file left one and landed in the other), which is exactly
+  // what isFolderTreeStale() below checks for on the very next call.
+  // Call this once for each folder whose direct contents actually
+  // changed - the game's old folder, its new one, or both - right after
+  // the move, so that in-app change doesn't look like an outside edit
+  // and force a fresh "find" scan it doesn't need. No-ops the same way
+  // the other three do when there's no cached tree yet (nothing to keep
+  // in sync), and also when 'folderPath' itself isn't a tracked entry
+  // (nothing there to refresh).
+  void refreshFolderMtime(std::string systemRootPath, std::string folderPath);
 #endif
 
 protected:

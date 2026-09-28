@@ -2844,4 +2844,46 @@ void ApiSystem::rescanFolderTree(std::string systemRootPath)
   std::string xmlPath = systemRootPath + "/folders.xml";
   rebuildFolderTree(systemRootPath, xmlPath);
 }
+
+void ApiSystem::refreshFolderMtime(std::string systemRootPath, std::string folderPath)
+{
+  std::string xmlPath = systemRootPath + "/folders.xml";
+  if (!Utils::FileSystem::exists(xmlPath))
+    return;
+
+  bool ok = false;
+  time_t rootMtime = 0;
+  std::vector<FolderCacheEntry> master = readSystemFolderTree(xmlPath, rootMtime, ok);
+  if (!ok)
+    return;
+
+  // A plain GAME move never adds, removes or renames anything in
+  // 'master' - the file that actually moved was never a cache entry to
+  // begin with - so this only ever touches one existing entry's stored
+  // mtime (or the cache's separate root mtime) in place, same as
+  // addFolderToCache() and friends above do for their own affected
+  // parent, just without any of their own path-list bookkeeping around
+  // it.
+  if (Utils::FileSystem::getCanonicalPath(folderPath) == Utils::FileSystem::getCanonicalPath(systemRootPath))
+  {
+    rootMtime = Utils::FileSystem::getFileModificationDate(systemRootPath).getTime();
+    writeSystemFolderTree(xmlPath, master, rootMtime);
+    return;
+  }
+
+  for (auto& entry : master)
+  {
+    if (entry.path != folderPath)
+      continue;
+
+    entry.mtime = Utils::FileSystem::getFileModificationDate(folderPath).getTime();
+    writeSystemFolderTree(xmlPath, master, rootMtime);
+    return;
+  }
+
+  // 'folderPath' isn't a tracked entry (e.g. it was never picked up by
+  // the last "find" scan) - nothing here to refresh, and nothing to
+  // write back either, since 'master' and 'rootMtime' are otherwise
+  // exactly what's already on disk.
+}
 #endif

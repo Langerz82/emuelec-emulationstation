@@ -523,6 +523,19 @@ void GuiFolderOptions::moveToFolder(FileData* file, const std::string& path)
 
   fd->addChild(newFile);
 
+  // Unlike the FOLDER case above, moving a plain GAME never adds, removes
+  // or renames anything in ApiSystem's own folders.xml cache - the game
+  // itself was never a cache entry - so none of addFolderToCache() /
+  // moveFolderInCache() / removeFolderFromCache() apply here. But the move
+  // still changes both parentDir's and fd's own mtimes on disk (a file
+  // just left one and landed in the other), which is exactly what
+  // getChildFolders()'s own staleness check looks for on its very next
+  // call - refresh both here so this in-app move doesn't look like an
+  // outside edit and force a fresh "find" scan of the whole system it
+  // doesn't need.
+  ApiSystem::getInstance()->refreshFolderMtime(sys->getStartPath(), parentDir->getPath());
+  ApiSystem::getInstance()->refreshFolderMtime(sys->getStartPath(), fd->getPath());
+
   // Moving UP is the only way the game's OLD folder can end up with nothing
   // left in it - moving DOWN always leaves the destination folder itself
   // behind as a child of parentDir, so parentDir can never empty out that way.
@@ -553,19 +566,31 @@ void GuiFolderOptions::moveToFolder(FileData* file, const std::string& path)
     for (int i = 0; i < upLevels; i++)
       static_cast<GoBackAccessor*>(simpleView)->goBack();
   }
-  else if (view != nullptr) {
-    // Either the folder we're leaving still has other things in it, or
-    // folder navigation isn't in play right now (e.g. a flat listing) - in
-    // both cases the established, safe pattern (see
-    // GuiGameOptions::deleteGame) is to hand the removal to the view
-    // itself, which detaches/deletes sourceFile and refreshes on its own,
-    // recomputing whatever's currently displayed - a flat list included -
-    // from the now up-to-date tree.
-    view.get()->remove(sourceFile);
-  }
   else {
+    // Either the folder we're leaving still has other things in it, or
+    // folder navigation isn't in play right now (e.g. a flat listing) -
+    // either way, detach sourceFile directly (same as the "no view"
+    // fallback right below, and the emptied-source branch above) and
+    // repopulate() whichever folder is actually being browsed right now,
+    // rather than handing this to view->remove(). That call used to route
+    // through ViewController::reloadGameListView(), which discards this
+    // view and builds a brand new one starting back at the system root,
+    // then tries to re-descend to roughly where the cursor was by
+    // searching for a nearby surviving item by path - if that search ever
+    // comes up empty (the cursor landed on a placeholder, or on an item
+    // that itself got flattened away by the very move that just
+    // happened), the screen silently resets to the system root instead of
+    // staying put. repopulate() gives the same end result far more
+    // directly: it re-derives the folder actually on top of mCursorStack
+    // and recomputes getChildrenListToDisplay() for it fresh, which is
+    // also what makes a sibling destination folder's own "having multiple
+    // games" flatten decision catch up immediately - not just this game's
+    // own removal.
     sys->getRootFolder()->removeFromVirtualFolders(sourceFile);
     delete sourceFile;
+
+    if (view != nullptr)
+      view.get()->repopulate();
   }
 }
 

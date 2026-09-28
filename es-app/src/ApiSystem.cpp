@@ -2456,49 +2456,90 @@ std::vector<std::string> ApiSystem::scanSystemFolderTree(const std::string& syst
   // it scans a system's ROM folder to build the actual gamelist tree
   // (media/medias, images, manuals, videos, assets, downloaded_* and
   // artwork, plus anything hidden) - only ever excluded here at
-  // 'systemRootPath's own direct-child level, matched with "-ipath" against
-  // each reserved name's own full top-level path rather than with
-  // "-mindepth"/"-maxdepth": those two apply to find's ENTIRE traversal no
-  // matter where they appear in the expression - putting one inside this
-  // prune condition to scope it to depth 1 would silently cap the whole
-  // scan to depth 1 instead of just deciding what to prune. Matching on
-  // each name's own top-level path keeps the exclusion scoped to exactly
-  // that level, so a folder further down the tree that a user made to
-  // organize games can still legitimately share one of these names without
-  // being hidden from this picker.
+  // 'systemRootPath's own direct-child level, exactly as it was when this
+  // was a single "-ipath"/"-prune" find call over the whole tree (kept
+  // deliberately plain, portable "-print" rather than "-noleaf"/"-printf" -
+  // see the git history on this function for why: those are GNU-findutils
+  // extensions this device's "find" doesn't recognize, and an unsupported
+  // option makes "find" refuse to run at all, which - since
+  // executeEnumerationScript() only captures stdout, not stderr - came back
+  // as a silent empty result rather than a visible error).
   //
-  // "-prune" then stops find from ever walking into a matched folder's own
-  // contents at all - the same reason these names were excluded before:
-  // they routinely hold thousands of scraped image/video files (one media
-  // file per ROM is normal), which is where a scan actually gets slow if
-  // it has to walk them first and only throw the results away by name
-  // afterwards. All of that in a single "find" call, rather than a first
-  // top-level-only pass followed by a batch of recursive ones.
+  // What's different now is that this exclusion decision, and the recursive
+  // walk of everything that survives it, are split into two steps so the
+  // second one can be fanned out across threads instead of running as one
+  // serial "find" process:
   //
-  // Deliberately just "-mindepth 1 -type d -print" here, nothing fancier:
-  // an earlier version of this also passed "-noleaf" and used "-printf" to
-  // fold each folder's mtime into this same pass instead of a second stat()
-  // per result afterward, both real wins on GNU find - but this device's
-  // "find" doesn't recognize one or both of them, and find's response to an
-  // option it doesn't understand is to refuse to run at all rather than
-  // ignore just that piece, which came back through popen() as a silent
-  // empty result ("NO FOLDERS FOUND" in the picker) rather than an error
-  // anywhere visible. "-ipath" for the reserved-name exclusion above is
-  // confirmed working on this device, so it stays; the rest goes back to
-  // plain, portable "find" syntax.
-  std::string cmd = "find \"" + systemRootPath + "\" \\( "
-    "-ipath \"" + systemRootPath + "/media\" -o "
-    "-ipath \"" + systemRootPath + "/medias\" -o "
-    "-ipath \"" + systemRootPath + "/images\" -o "
-    "-ipath \"" + systemRootPath + "/manuals\" -o "
-    "-ipath \"" + systemRootPath + "/videos\" -o "
-    "-ipath \"" + systemRootPath + "/assets\" -o "
-    "-ipath \"" + systemRootPath + "/artwork\" -o "
-    "-ipath \"" + systemRootPath + "/downloaded_*\" -o "
-    "-ipath \"" + systemRootPath + "/.*\" "
-    "\\) -prune -o -mindepth 1 -type d -print";
+  // Step 1: a fast, non-recursive listing of just 'systemRootPath's direct
+  // children - "-mindepth 1 -maxdepth 1" is safe to use directly here
+  // (unlike inside a "-prune" branch) because this command has no compound
+  // expression for those two to unexpectedly scope - and filter out the
+  // reserved names in C++, the same way the very first version of this
+  // function (before it became one "find" call) used to.
+  std::string topCmd = "find \"" + systemRootPath + "\" -mindepth 1 -maxdepth 1 -type d -print";
 
-  return executeEnumerationScript(cmd);
+  std::vector<std::string> subRoots;
+  for (auto& path : executeEnumerationScript(topCmd))
+  {
+    std::string name = Utils::String::toLower(Utils::FileSystem::getFileName(path));
+
+    if (name.size() && name[0] == '.')
+      continue;
+
+    if (name == "media" || name == "medias" || name == "images" || name == "manuals" ||
+      name == "videos" || name == "assets" || name == "artwork" ||
+      Utils::String::startsWith(name, "downloaded_"))
+      continue;
+
+    subRoots.push_back(path);
+  }
+
+  if (subRoots.empty())
+    return std::vector<std::string>();
+
+  // Step 2: one plain recursive "find <subRoot> -type d -print" per
+  // surviving top-level folder - no "-prune" needed here at all, since the
+  // reserved-name exclusion only ever applied at the top level above, so
+  // everything under a kept folder is fair game - fanned out across a small
+  // pool of worker threads (Utils::ThreadPool, the same helper
+  // extractPdfImages() elsewhere in this file already uses to run several
+  // of its own external commands at once) so a ROM library with several
+  // top-level folders - one per organizational folder the user made, one
+  // per arcade compilation, etc - walks them all at the same time instead
+  // of one process working through the whole tree alone. This only ever
+  // runs on the very first scan for a system, or when isFolderTreeStale()
+  // below catches an outside change - every other lookup is served straight
+  // out of folders.xml - but that first scan is exactly the one that can
+  // take a while on a big library, so it's the one worth parallelizing.
+  //
+  // Each queued item writes into its own index of a vector sized up front,
+  // so no locking is needed between them - the default single-thread-per-
+  // core count Utils::ThreadPool(1) already uses elsewhere is right here
+  // too: more "find" processes than cores just contend with each other for
+  // the same disk/network link without actually finishing any sooner.
+  std::vector<std::vector<std::string>> perRootResults(subRoots.size());
+
+  {
+    Utils::ThreadPool pool(1);
+
+    for (size_t i = 0; i < subRoots.size(); i++)
+    {
+      pool.queueWorkItem([this, &perRootResults, &subRoots, i]
+      {
+        std::string cmd = "find \"" + subRoots[i] + "\" -type d -print";
+        perRootResults[i] = executeEnumerationScript(cmd);
+      });
+    }
+
+    pool.wait();
+  }
+
+  std::vector<std::string> result;
+  for (auto& sub : perRootResults)
+    for (auto& path : sub)
+      result.push_back(path);
+
+  return result;
 }
 
 std::vector<ApiSystem::FolderCacheEntry> ApiSystem::readSystemFolderTree(const std::string& xmlPath, time_t& rootMtime, bool& ok)
@@ -2571,17 +2612,32 @@ std::vector<ApiSystem::FolderCacheEntry> ApiSystem::rebuildFolderTree(const std:
 {
   // scanSystemFolderTree() only hands back each found folder's path - it
   // stays on plain, portable "find ... -print" (see that function's own
-  // comment for why), so this loop is what actually fills in each
-  // FolderCacheEntry::mtime, one stat() per result.
+  // comment for why) - so this is what actually fills in each
+  // FolderCacheEntry::mtime, one stat() per result. On a system's very
+  // first scan that can be just as many stat() calls as scanSystemFolderTree()
+  // itself made "find" processes for, each one its own blocking disk/network
+  // round trip on exactly the kind of slow ROM storage (SD card, USB stick,
+  // SMB/NFS share) this whole cache exists to avoid re-paying on every
+  // lookup - so fan it out across a thread pool the same way, rather than
+  // walking the list one entry at a time.
   auto scanned = scanSystemFolderTree(systemRootPath);
 
-  std::vector<FolderCacheEntry> master;
-  for (auto& folder : scanned)
+  std::vector<FolderCacheEntry> master(scanned.size());
+
+  if (scanned.size())
   {
-    FolderCacheEntry entry;
-    entry.path = folder;
-    entry.mtime = Utils::FileSystem::getFileModificationDate(folder).getTime();
-    master.push_back(entry);
+    Utils::ThreadPool pool(1);
+
+    for (size_t i = 0; i < scanned.size(); i++)
+    {
+      pool.queueWorkItem([&master, &scanned, i]
+      {
+        master[i].path = scanned[i];
+        master[i].mtime = Utils::FileSystem::getFileModificationDate(scanned[i]).getTime();
+      });
+    }
+
+    pool.wait();
   }
 
   time_t rootMtime = Utils::FileSystem::getFileModificationDate(systemRootPath).getTime();

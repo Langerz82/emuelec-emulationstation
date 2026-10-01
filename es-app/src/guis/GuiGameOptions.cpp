@@ -612,13 +612,12 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 	// isn't (see ISimpleGameListView::createNoEntriesPlaceholder() /
 	// createParentFolderData(), and mLastParentFolderData shared by both).
 	// The whole "OPTIONS" group above is skipped for both (fromPlaceholder),
-	// so there's normally nothing here to act on - but the user can still
-	// reasonably want to create a folder inside the one they're sitting in,
-	// or remove it and step back out, so offer CREATE FOLDER and REMOVE
-	// FOLDER on their own, resolved against whichever folder the gamelist
-	// is actually browsing right now (getCurrentFolder()) rather than
-	// 'game' itself, which was never added to the tree and so has no real
-	// parent of its own to derive that from.
+	// since 'game' itself was never added to the tree - so instead offer the
+	// same "FOLDER OPTIONS" screen a selected folder gets, resolved against
+	// whichever folder the gamelist is actually browsing right now
+	// (getCurrentFolder()). That screen then offers CREATE FOLDER IN FOLDER
+	// (inside the current folder), CREATE FOLDER (next to it), and MOVE /
+	// RENAME / REMOVE for the current folder itself.
 	if ((game->isPlaceHolder() || game->getPath() == "..") && mSystem->isGameSystem() && UIModeController::getInstance()->isUIModeFull())
 	{
 		auto simpleView = dynamic_cast<ISimpleGameListView*>(getGamelist());
@@ -627,25 +626,24 @@ GuiGameOptions::GuiGameOptions(Window* window, FileData* game) : GuiComponent(wi
 		if (currentFolder != nullptr)
 		{
 			mMenu.addGroup(_("OPTIONS"));
-			mMenu.addEntry(_("CREATE FOLDER"), false, [this, currentFolder]
-			{
-				GuiFolderOptions::createFolder(mWindow, currentFolder);
-				close();
-			});
 
-			// currentFolder always has a real parent to land back on here -
-			// getCurrentFolder() only ever returns a folder actually pushed
-			// onto the cursor stack by navigating into it, never the
-			// system's own ROM root (see ISimpleGameListView::goBack() /
-			// BasicGameListView::populateList()) - but check anyway rather
-			// than assume it, since offering to remove a folder with
-			// nowhere to go back to would leave the gamelist with no
-			// current folder at all.
+			// getCurrentFolder() only ever returns a folder actually navigated
+			// into, never the system's ROM root, so it always has a parent -
+			// but check anyway, the same guard the regular "FOLDER OPTIONS"
+			// entry above uses. At the root, just offer CREATE FOLDER inside it.
 			if (currentFolder->getParent() != nullptr)
 			{
-				mMenu.addEntry(_("REMOVE FOLDER"), false, [this, currentFolder]
+				mMenu.addEntry(_("FOLDER OPTIONS"), true, [this, currentFolder]
 				{
-					GuiFolderOptions::confirmAndRemove(mWindow, currentFolder);
+					mWindow->pushGui(new GuiFolderOptions(mWindow, currentFolder));
+					close();
+				});
+			}
+			else
+			{
+				mMenu.addEntry(_("CREATE FOLDER"), false, [this, currentFolder]
+				{
+					GuiFolderOptions::createFolder(mWindow, currentFolder);
 					close();
 				});
 			}

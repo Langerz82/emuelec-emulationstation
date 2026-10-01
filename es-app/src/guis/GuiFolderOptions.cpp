@@ -152,6 +152,16 @@ GuiFolderOptions::GuiFolderOptions(Window* window, FileData* file) :
 
   if (file->getType() == FOLDER)
   {
+    // Same name prompt as CREATE FOLDER above, but the new folder is created
+    // INSIDE the selected folder rather than next to it. 'file' is already a
+    // real FolderData here (GuiGameOptions never offers FOLDER OPTIONS for a
+    // collection or virtual-storage folder), so it's the parent directly.
+    // onCreated closes this screen, same as CREATE FOLDER above.
+    addEntry(_("CREATE FOLDER IN FOLDER"), false, [this, window, file]
+    {
+      createFolder(window, (FolderData*)file, [this] { close(); });
+    });
+
     // 'file' IS the folder to rename here - no picker needed, same as
     // REMOVE FOLDER below. onRenamed closes this screen once the rename
     // actually happens - not on a cancel or a name collision - same as
@@ -457,6 +467,15 @@ void GuiFolderOptions::moveToFolder(FileData* file, const std::string& path)
       // use, rather than view->remove() (which would detach AND delete it,
       // destroying the very subtree just preserved above).
       view.get()->repopulate();
+
+      // FOLDER OPTIONS can also be opened on the folder currently being
+      // browsed (via the ".." entry), in which case movingFolder IS the
+      // view's current folder and the cursor stack still points at its old
+      // ancestors. setCursor() on a folder that isn't in the displayed
+      // list rebuilds that stack from the tree, landing on movingFolder's
+      // new parent with it selected - same as renameFolder() above.
+      if (simpleView != nullptr && simpleView->getCurrentFolder() == movingFolder)
+        view->setCursor(movingFolder);
     }
 
     return;
